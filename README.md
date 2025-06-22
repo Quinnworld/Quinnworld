@@ -1,147 +1,225 @@
-// 12个问题，4个选项，每个选项映射一个基因位点
-const questions = [
-  {
-    question: "你更喜欢以下哪种活动？",
-    options: ["读书", "运动", "社交", "艺术创作"],
-    geneMapping: [0, 1, 2, 3] // 每个选项映射到基因型（例如，0=智力，1=创造力，2=情绪，3=社交）
-  },
-  {
-    question: "你通常如何解决问题？",
-    options: ["逻辑推理", "直觉判断", "团队协作", "独立思考"],
-    geneMapping: [0, 1, 2, 3]
-  },
-  {
-    question: "你喜欢什么样的工作环境？",
-    options: ["安静的", "充满挑战的", "合作的", "自由的"],
-    geneMapping: [0, 1, 2, 3]
-  },
-  {
-    question: "在社交场合中，你的表现如何？",
-    options: ["外向", "内向", "随机", "随和"],
-    geneMapping: [0, 1, 2, 3]
-  },
-  // 可以继续添加更多问题
-];
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个性化基因报告</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 20px;
+    }
+    h2 {
+      color: #333;
+    }
+    .question-container {
+      margin-top: 20px;
+    }
+    .question {
+      margin-bottom: 15px;
+      font-size: 18px;
+      color: #333;
+    }
+    .answer {
+      margin-top: 10px;
+    }
+    .answer input {
+      margin-right: 10px;
+    }
+    .submit-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .submit-btn:hover {
+      background-color: #45a049;
+    }
+    .result-container {
+      margin-top: 20px;
+      display: none;
+    }
+    .book-list {
+      margin-top: 20px;
+    }
+    .book-item {
+      padding: 10px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+    .book-item h3 {
+      color: #444;
+    }
+  </style>
+</head>
+<body>
 
-// 存储用户答案
-let userAnswers = new Array(questions.length);
+  <h2>个性化基因报告问卷</h2>
 
-// 生成问卷
-function generateQuestions() {
-  const questionContainer = document.getElementById('questionContainer');
-  questions.forEach((q, index) => {
-    const questionElement = document.createElement('div');
-    questionElement.classList.add('question');
-    questionElement.innerHTML = `<p>${q.question}</p>`;
+  <div id="questionContainer" class="question-container"></div>
+  <button class="submit-btn" onclick="submitAnswers()">提交</button>
 
-    q.options.forEach((option, i) => {
-      const answerElement = document.createElement('div');
-      answerElement.classList.add('answer');
-      answerElement.innerHTML = `
-        <input type="radio" name="q${index}" value="${i}" onclick="storeAnswer(${index}, ${i})">
-        <label>${option}</label>
+  <div id="resultContainer" class="result-container">
+    <h3>您的个性报告</h3>
+    <div id="reportContent"></div>
+    <h4>推荐书籍</h4>
+    <div id="bookList" class="book-list"></div>
+  </div>
+
+  <script>
+    // 12个问题，4个选项，每个选项映射一个基因位点
+    const questions = [
+      {
+        question: "你更喜欢以下哪种活动？",
+        options: ["读书", "运动", "社交", "艺术创作"],
+        geneMapping: [0, 1, 2, 3] // 每个选项映射到基因型（例如，0=智力，1=创造力，2=情绪，3=社交）
+      },
+      {
+        question: "你通常如何解决问题？",
+        options: ["逻辑推理", "直觉判断", "团队协作", "独立思考"],
+        geneMapping: [0, 1, 2, 3]
+      },
+      {
+        question: "你喜欢什么样的工作环境？",
+        options: ["安静的", "充满挑战的", "合作的", "自由的"],
+        geneMapping: [0, 1, 2, 3]
+      },
+      {
+        question: "在社交场合中，你的表现如何？",
+        options: ["外向", "内向", "随机", "随和"],
+        geneMapping: [0, 1, 2, 3]
+      },
+      // 可以继续添加更多问题
+    ];
+
+    // 存储用户答案
+    let userAnswers = new Array(questions.length);
+
+    // 生成问卷
+    function generateQuestions() {
+      const questionContainer = document.getElementById('questionContainer');
+      questions.forEach((q, index) => {
+        const questionElement = document.createElement('div');
+        questionElement.classList.add('question');
+        questionElement.innerHTML = `<p>${q.question}</p>`;
+
+        q.options.forEach((option, i) => {
+          const answerElement = document.createElement('div');
+          answerElement.classList.add('answer');
+          answerElement.innerHTML = `
+            <input type="radio" name="q${index}" value="${i}" onclick="storeAnswer(${index}, ${i})">
+            <label>${option}</label>
+          `;
+          questionElement.appendChild(answerElement);
+        });
+
+        questionContainer.appendChild(questionElement);
+      });
+    }
+
+    // 存储答案
+    function storeAnswer(index, optionIndex) {
+      userAnswers[index] = optionIndex;
+    }
+
+    // 提交问卷并生成报告
+    function submitAnswers() {
+      if (userAnswers.includes(undefined)) {
+        alert("请完成所有问题!");
+        return;
+      }
+
+      const reportContent = generateReport(userAnswers);
+      const bookRecommendations = generateBookRecommendations(userAnswers);
+
+      // 显示报告内容
+      document.getElementById('resultContainer').style.display = 'block';
+      document.getElementById('reportContent').innerHTML = reportContent;
+      
+      // 显示推荐书籍
+      displayBookRecommendations(bookRecommendations);
+    }
+
+    // 生成报告内容
+    function generateReport(answers) {
+      const scores = calculateScores(answers);
+      let report = `<p>您的个性评分如下：</p><ul>`;
+      
+      report += `
+        <li>智力：${scores.intelligence}</li>
+        <li>情绪管理：${scores.emotion}</li>
+        <li>创造力：${scores.creativity}</li>
+        <li>社交能力：${scores.social}</li>
       `;
-      questionElement.appendChild(answerElement);
-    });
+      report += `</ul>`;
 
-    questionContainer.appendChild(questionElement);
-  });
-}
+      return report;
+    }
 
-// 存储答案
-function storeAnswer(index, optionIndex) {
-  userAnswers[index] = optionIndex;
-}
+    // 计算得分（根据用户的答案计算各项分数）
+    function calculateScores(answers) {
+      let scores = {
+        intelligence: 0,
+        emotion: 0,
+        creativity: 0,
+        social: 0
+      };
 
-// 提交问卷并生成报告
-function submitAnswers() {
-  if (userAnswers.includes(undefined)) {
-    alert("请完成所有问题!");
-    return;
-  }
+      answers.forEach((answerIndex, questionIndex) => {
+        const mapping = questions[questionIndex].geneMapping[answerIndex];
+        // 根据答案更新分数
+        if (mapping === 0) scores.intelligence++;
+        if (mapping === 1) scores.creativity++;
+        if (mapping === 2) scores.emotion++;
+        if (mapping === 3) scores.social++;
+      });
 
-  const reportContent = generateReport(userAnswers);
-  const bookRecommendations = generateBookRecommendations(userAnswers);
+      return scores;
+    }
 
-  // 显示报告内容
-  document.getElementById('resultContainer').style.display = 'block';
-  document.getElementById('reportContent').innerHTML = reportContent;
-  
-  // 显示推荐书籍
-  displayBookRecommendations(bookRecommendations);
-}
+    // 生成书籍推荐
+    function generateBookRecommendations(answers) {
+      const bookLibrary = [
+        { title: "批判性思维", author: "理查德·保罗", genre: "思维训练", category: "智力" },
+        { title: "情绪的智慧", author: "丹尼尔·戈尔曼", genre: "情绪管理", category: "情绪" },
+        { title: "创新者的解答", author: "克莱顿·M·克里斯坦森", genre: "创新思维", category: "创造力" },
+        { title: "高效能人士的七个习惯", author: "史蒂芬·柯维", genre: "职业发展", category: "社交" }
+      ];
 
-// 生成报告内容
-function generateReport(answers) {
-  const scores = calculateScores(answers);
-  let report = `<p>您的个性评分如下：</p><ul>`;
-  
-  report += `
-    <li>智力：${scores.intelligence}</li>
-    <li>情绪管理：${scores.emotion}</li>
-    <li>创造力：${scores.creativity}</li>
-    <li>社交能力：${scores.social}</li>
-  `;
-  report += `</ul>`;
+      let recommendations = [];
 
-  return report;
-}
+      const scores = calculateScores(answers);
+      if (scores.intelligence > 1) recommendations.push(bookLibrary[0]);
+      if (scores.emotion > 1) recommendations.push(bookLibrary[1]);
+      if (scores.creativity > 1) recommendations.push(bookLibrary[2]);
+      if (scores.social > 1) recommendations.push(bookLibrary[3]);
 
-// 计算得分（根据用户的答案计算各项分数）
-function calculateScores(answers) {
-  let scores = {
-    intelligence: 0,
-    emotion: 0,
-    creativity: 0,
-    social: 0
-  };
+      return recommendations;
+    }
 
-  answers.forEach((answerIndex, questionIndex) => {
-    const mapping = questions[questionIndex].geneMapping[answerIndex];
-    // 根据答案更新分数
-    if (mapping === 0) scores.intelligence++;
-    if (mapping === 1) scores.creativity++;
-    if (mapping === 2) scores.emotion++;
-    if (mapping === 3) scores.social++;
-  });
+    // 显示推荐书籍
+    function displayBookRecommendations(books) {
+      const bookListElement = document.getElementById('bookList');
+      books.forEach(book => {
+        const bookItem = document.createElement('div');
+        bookItem.className = 'book-item';
+        bookItem.innerHTML = `
+          <h3>${book.title}</h3>
+          <p>作者: ${book.author}</p>
+          <p>类别: ${book.genre}</p>
+        `;
+        bookListElement.appendChild(bookItem);
+      });
+    }
 
-  return scores;
-}
+    // 初始化问卷
+    generateQuestions();
+  </script>
 
-// 生成书籍推荐
-function generateBookRecommendations(answers) {
-  const bookLibrary = [
-    { title: "批判性思维", author: "理查德·保罗", genre: "思维训练", category: "智力" },
-    { title: "情绪的智慧", author: "丹尼尔·戈尔曼", genre: "情绪管理", category: "情绪" },
-    { title: "创新者的解答", author: "克莱顿·M·克里斯坦森", genre: "创新思维", category: "创造力" },
-    { title: "高效能人士的七个习惯", author: "史蒂芬·柯维", genre: "职业发展", category: "社交" }
-  ];
-
-  let recommendations = [];
-
-  const scores = calculateScores(answers);
-  if (scores.intelligence > 1) recommendations.push(bookLibrary[0]);
-  if (scores.emotion > 1) recommendations.push(bookLibrary[1]);
-  if (scores.creativity > 1) recommendations.push(bookLibrary[2]);
-  if (scores.social > 1) recommendations.push(bookLibrary[3]);
-
-  return recommendations;
-}
-
-// 显示推荐书籍
-function displayBookRecommendations(books) {
-  const bookListElement = document.getElementById('bookList');
-  books.forEach(book => {
-    const bookItem = document.createElement('div');
-    bookItem.className = 'book-item';
-    bookItem.innerHTML = `
-      <h3>${book.title}</h3>
-      <p>作者: ${book.author}</p>
-      <p>类别: ${book.genre}</p>
-    `;
-    bookListElement.appendChild(bookItem);
-  });
-}
-
-// 初始化问卷
-generateQuestions();
+</body>
+</html>

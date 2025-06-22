@@ -51,7 +51,7 @@ const dimensionLabels = {
   StressResilience: '抗压能力'
 };
 
-// 问题与基因对应评分
+// 12个问题与基因对应评分
 const questions = [
   { q: "当你面对挫折时，你通常会？", options: [
     { text: "快速调整情绪，积极应对", scores: { EmotionalStability: 8, StressResilience: 7 } },
@@ -77,8 +77,62 @@ const questions = [
     { text: "沉默不语，独自承担", scores: { EmotionalStability: 5, StressResilience: 4 } },
     { text: "逃避，避免面对压力源", scores: { StressResilience: 2, EmotionalStability: 3 } }
   ] },
-  // 继续添加更多问题...
+  { q: "你通常怎样处理焦虑情绪？", options: [
+    { text: "通过冥想或深呼吸放松自己", scores: { EmotionalStability: 8, StressResilience: 7 } },
+    { text: "找朋友聊一聊，分散注意力", scores: { Sociability: 7, EmotionalStability: 5 } },
+    { text: "坚持自己的方式，继续工作", scores: { Impulsivity: 6, AttentionControl: 6 } },
+    { text: "消极情绪一直缠绕，难以走出困境", scores: { EmotionalStability: 3, StressResilience: 4 } }
+  ] },
+  { q: "你对待新任务的态度是？", options: [
+    { text: "充满好奇，迅速开始行动", scores: { Impulsivity: 7, Sociability: 5 } },
+    { text: "谨慎小心，先了解清楚再行动", scores: { EmotionalStability: 8, AttentionControl: 7 } },
+    { text: "拖延，直到最后一分钟才开始做", scores: { StressResilience: 4, Impulsivity: 3 } },
+    { text: "如果不感兴趣，就会直接放弃", scores: { Sociability: 4, StressResilience: 5 } }
+  ] },
+  { q: "你通常如何应对失败？", options: [
+    { text: "总结经验，重新调整计划", scores: { EmotionalStability: 8, StressResilience: 6 } },
+    { text: "失落很久，难以接受", scores: { EmotionalStability: 4, StressResilience: 3 } },
+    { text: "向他人寻求安慰和鼓励", scores: { Sociability: 6, EmotionalStability: 5 } },
+    { text: "放弃尝试，避免失败的情境", scores: { StressResilience: 2, EmotionalStability: 3 } }
+  ] },
+  { q: "你喜欢在团队中担任什么角色？", options: [
+    { text: "领导角色，主导整个团队", scores: { Sociability: 9, Impulsivity: 7 } },
+    { text: "执行者，听从领导安排", scores: { Sociability: 5, AttentionControl: 6 } },
+    { text: "协调者，帮助大家沟通合作", scores: { Sociability: 8, EmotionalStability: 6 } },
+    { text: "独立工作者，不喜欢干扰", scores: { Sociability: 3, StressResilience: 5 } }
+  ] },
+  { q: "你觉得自己在压力下能保持冷静吗？", options: [
+    { text: "能保持冷静，寻找解决办法", scores: { StressResilience: 8, EmotionalStability: 7 } },
+    { text: "偶尔能保持冷静，偶尔情绪失控", scores: { StressResilience: 5, EmotionalStability: 4 } },
+    { text: "容易情绪化，难以冷静思考", scores: { StressResilience: 3, EmotionalStability: 2 } },
+    { text: "完全失控，感到无法应对", scores: { StressResilience: 1, EmotionalStability: 1 } }
+  ] },
+  { q: "你在群体中的社交倾向如何？", options: [
+    { text: "非常外向，喜欢成为焦点", scores: { Sociability: 9 } },
+    { text: "较为内向，喜欢小范围交流", scores: { Sociability: 5 } },
+    { text: "很少主动，通常处于旁观者", scores: { Sociability: 3 } },
+    { text: "完全不喜欢社交，尽量避开人群", scores: { Sociability: 1 } }
+  ] },
+  { q: "你通常如何处理情绪波动？", options: [
+    { text: "通过冥想、运动等方式平复情绪", scores: { EmotionalStability: 8, StressResilience: 7 } },
+    { text: "与朋友交流，寻求安慰", scores: { Sociability: 6, EmotionalStability: 5 } },
+    { text: "自己默默消化，时间过去后会好转", scores: { EmotionalStability: 4, StressResilience: 3 } },
+    { text: "情绪波动大，容易失控", scores: { EmotionalStability: 2, StressResilience: 2 } }
+  ] },
+  { q: "你如何看待挑战性的任务？", options: [
+    { text: "喜欢挑战，乐于迎接新任务", scores: { RiskTolerance: 8, Sociability: 6 } },
+    { text: "有点害怕，但还是会尝试", scores: { RiskTolerance: 5, EmotionalStability: 4 } },
+    { text: "不太喜欢，倾向于避免复杂任务", scores: { RiskTolerance: 3, StressResilience: 3 } },
+    { text: "完全不喜欢，避免任何挑战", scores: { RiskTolerance: 1, EmotionalStability: 2 } }
+  ] },
+  { q: "你对于未来的规划是否清晰？", options: [
+    { text: "非常清晰，已设定明确目标", scores: { AttentionControl: 8, EmotionalStability: 7 } },
+    { text: "有大致方向，但没有明确的计划", scores: { AttentionControl: 5, Sociability: 4 } },
+    { text: "没有具体计划，只是随遇而安", scores: { AttentionControl: 3, Sociability: 5 } },
+    { text: "完全没有计划，甚至感到迷茫", scores: { AttentionControl: 2, EmotionalStability: 3 } }
+  ] }
 ];
+
 
 // 随机打乱数组
 function shuffleArray(arr) {
@@ -101,7 +155,7 @@ function renderQuestion() {
   const container = document.getElementById('question-container');
   container.innerHTML = `
     <div class="question">
-      <p>${question.q}</p>
+      <p><strong>问题 ${currentQuestionIndex + 1}</strong>: ${question.q}</p>
       ${question.options.map((opt, idx) => `
         <label>
           <input type="radio" name="question" value="${idx}" required>

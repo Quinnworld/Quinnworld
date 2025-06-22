@@ -394,3 +394,85 @@
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>基因科学问卷 + 雷达图 + 动漫Prompt生成</title>
+<style>
+  /* 省略样式，保持和之前一致 */
+</style>
+</head>
+<body>
+
+<!-- 页面结构和之前一样 -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // geneDimensions, questions, 状态变量等均与之前相同
+
+  // ... 省略初始化和事件绑定 ...
+
+  function showResult(){
+    // 归一化分数 -8 ~ 8 映射0-100
+    const dimensionScoresNormalized = geneDimensions.map(dim => {
+      const raw = scores[dim];
+      return (raw + 8) / 16 * 100;
+    });
+
+    // 总分 = 六个维度平均得分，保留1位小数
+    const totalScoreRaw = dimensionScoresNormalized.reduce((a,b) => a + b, 0) / dimensionScoresNormalized.length;
+    const totalScore = totalScoreRaw.toFixed(1);
+    totalScoreText.textContent = totalScore;
+
+    const chartColor = getColorByGeneType(age, gender);
+
+    if(radarChart){
+      radarChart.destroy();
+    }
+    const ctx = radarCanvas.getContext("2d");
+    radarChart = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: geneDimensions,
+        datasets: [{
+          label: '基因维度得分',
+          data: dimensionScoresNormalized,
+          fill: true,
+          backgroundColor: chartColor.replace("0.7", "0.3"),
+          borderColor: chartColor.replace("0.7", "1"),
+          pointBackgroundColor: chartColor.replace("0.7", "1")
+        }]
+      },
+      options: {
+        scales: {
+          r: {
+            min: 0,
+            max: 100,
+            ticks: { stepSize: 20, color: '#555' },
+            grid: { color: '#ccc' },
+            pointLabels: { color: '#222', font: { size: 14 } }
+          }
+        },
+        plugins: {
+          legend: { labels: { color: '#222', font: { size: 14, weight: 'bold' } } }
+        }
+      }
+    });
+
+    let prompt = `Anime-style portrait of a character with genetic trait scores (0-100):\n`;
+    geneDimensions.forEach((dim, i) => {
+      prompt += `${dim}: ${dimensionScoresNormalized[i].toFixed(0)}\n`;
+    });
+    prompt += `Age: ${age}\nGender: ${gender === "male" ? "Male" : "Female"}`;
+
+    promptOutput.textContent = prompt;
+    promptOutput.style.color = chartColor.replace("0.7", "1");
+    totalScoreText.style.color = chartColor.replace("0.7", "1");
+  }
+</script>
+
+</body>
+</html>
+

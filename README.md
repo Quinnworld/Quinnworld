@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>心理测评系统示范</title>
+<title>心理测评系统示范（趣味分享版）</title>
 <style>
   body {
     max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif;
@@ -60,7 +60,7 @@
 </head>
 <body>
 
-<h2>心理测评系统示范</h2>
+<h2>心理测评系统示范（趣味分享版）</h2>
 
 <div id="sectionUserInfo">
   <label for="inputAge">年龄</label>
@@ -89,6 +89,14 @@
   <pre id="basicAnalysis"></pre>
   <h3>深度解析（付费）</h3>
   <pre id="premiumAnalysis" title="点击生成深度解析">点击生成深度解析</pre>
+
+  <!-- 新增分享和邀请按钮 -->
+  <div style="text-align:center; margin-top:15px;">
+    <button id="btnShare" style="background:#10b981; margin-right:10px;">生成趣味分享卡</button>
+    <button id="btnInvite" style="background:#3b82f6;">邀请好友解锁深度解析</button>
+  </div>
+  <div id="shareText" style="margin-top:10px; padding:10px; background:#f0fdf4; border:1px solid #34d399; border-radius:6px; display:none; user-select: all; cursor: pointer;"></div>
+
   <button id="btnRestart">重新开始</button>
 </div>
 
@@ -200,6 +208,9 @@
   const btnStart = document.getElementById("btnStart");
   const btnRestart = document.getElementById("btnRestart");
   const totalScoreText = document.getElementById("totalScoreText");
+  const btnShare = document.getElementById("btnShare");
+  const btnInvite = document.getElementById("btnInvite");
+  const shareTextDiv = document.getElementById("shareText");
 
   function updateBackgroundColor() {
     document.body.style.backgroundColor = "#fff";
@@ -330,6 +341,7 @@
     sectionUserInfo.style.display = "none";
     sectionQuiz.style.display = "block";
     sectionResult.style.display = "none";
+    shareTextDiv.style.display = "none";
     renderQuestion(currentIndex);
   };
 
@@ -338,6 +350,7 @@
     sectionQuiz.style.display = "none";
     sectionResult.style.display = "none";
     userHasPaid = false; // 重置付费状态
+    shareTextDiv.style.display = "none";
   };
 
   btnNext.onclick = () => {
@@ -370,6 +383,8 @@
     basicAnalysisEl.textContent = generateBasicAnalysisWithAdvice(tagScores);
 
     premiumAnalysisEl.textContent = "点击生成深度解析";
+
+    shareTextDiv.style.display = "none";
   }
 
   premiumAnalysisEl.onclick = () => {
@@ -377,32 +392,41 @@
       alert("请先购买深度解析服务");
       return;
     }
-    // 这里调用后端AI接口生成深度解析（示范）
     premiumAnalysisEl.textContent = "深度解析生成中，请稍候...";
-    // 伪代码示范，需替换为实际接口调用
     setTimeout(() => {
       premiumAnalysisEl.textContent = "这是基于AI生成的深度个性解析报告，内容更丰富、更专业。";
     }, 1500);
   };
 
-  function renderQuestion(index) {
-    currentIndex = index;
-    const q = questionPool[index];
-    qTextEl.textContent = q.text;
-    optionsEl.innerHTML = "";
-    btnNext.disabled = selectedOptions[index] === null;
-    btnPrev.disabled = index === 0;
-    for (let i = 0; i < q.options.length; i++) {
-      const opt = document.createElement("div");
-      opt.className = "option";
-      opt.textContent = q.options[i].text;
-      opt.onclick = () => selectOption(i);
-      if (selectedOptions[index] === i) opt.classList.add("selected");
-      optionsEl.appendChild(opt);
+  // 新增分享按钮事件
+  btnShare.onclick = () => {
+    const totalScore = computeTotalScore(tagScores);
+    let funDesc = "";
+    if (totalScore >= 80) funDesc = "你是个充满活力的阳光达人！🌟";
+    else if (totalScore >= 60) funDesc = "你有着稳健的内心和积极的生活态度。😊";
+    else if (totalScore >= 40) funDesc = "你是个思考细腻，值得信赖的朋友。🤔";
+    else funDesc = "你有独特的个性魅力，值得更多了解！✨";
+
+    const shareContent = `【心理测评结果】综合得分：${totalScore}分\n${funDesc}\n快来测测你的性格吧！👉 https://yourdomain.com/psych-test`;
+
+    shareTextDiv.style.display = "block";
+    shareTextDiv.textContent = shareContent;
+    alert("分享卡已生成，长按复制内容分享到朋友圈或好友！");
+  };
+
+  // 新增邀请按钮事件
+  btnInvite.onclick = () => {
+    if (userHasPaid) {
+      alert("您已解锁深度解析，无需邀请好友。");
+      return;
     }
-    progressText.textContent = `第 ${index + 1} / ${questionPool.length} 题`;
-    updateBackgroundColor();
-  }
+    const confirmInvite = confirm("邀请3位好友完成测评即可免费解锁深度解析，是否立即邀请？");
+    if (confirmInvite) {
+      alert("邀请链接已复制，请发送给好友！");
+      userHasPaid = true; // 模拟邀请成功解锁
+      premiumAnalysisEl.textContent = "点击生成深度解析";
+    }
+  };
 </script>
 
 </body>

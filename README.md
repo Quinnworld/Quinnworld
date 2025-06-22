@@ -73,6 +73,7 @@ const questions = [
 let userAnswers = [];
 let currentQuestionIndex = 0;
 
+// 渲染问题
 function renderQuestion() {
   const question = questions[currentQuestionIndex];
   const container = document.getElementById('question-container');
@@ -88,9 +89,13 @@ function renderQuestion() {
       <button id="submit-btn">提交</button>
     </div>
   `;
-  document.getElementById('submit-btn').addEventListener('click', handleSubmit);
+
+  // 绑定点击事件
+  const submitBtn = document.getElementById('submit-btn');
+  submitBtn.addEventListener('click', handleSubmit);
 }
 
+// 处理提交
 function handleSubmit() {
   const selectedOption = document.querySelector('input[name="question"]:checked');
   if (!selectedOption) {
@@ -98,17 +103,20 @@ function handleSubmit() {
     return;
   }
 
+  // 存储用户的选择
   const selectedIndex = parseInt(selectedOption.value);
   userAnswers.push(questions[currentQuestionIndex].options[selectedIndex].scores);
 
+  // 判断是否为最后一个问题
   if (currentQuestionIndex < questions.length - 1) {
     currentQuestionIndex++;
-    renderQuestion();
+    renderQuestion();  // 渲染下一个问题
   } else {
-    displayResults();
+    displayResults();  // 显示最终结果
   }
 }
 
+// 显示结果
 function displayResults() {
   const totalScores = userAnswers.reduce((acc, scoreObj) => {
     for (const key in scoreObj) {
@@ -119,6 +127,7 @@ function displayResults() {
 
   const totalScore = Object.values(totalScores).reduce((sum, score) => sum + score, 0) / Object.keys(totalScores).length;
 
+  // 显示雷达图
   const ctx = document.getElementById('radarChart').getContext('2d');
   new Chart(ctx, {
     type: 'radar',
@@ -139,6 +148,7 @@ function displayResults() {
     }
   });
 
+  // 显示报告
   document.getElementById('radar-container').style.display = 'block';
   document.getElementById('report').style.display = 'block';
   document.getElementById('total-score').textContent = `综合总分：${totalScore.toFixed(1)} / 100`;
@@ -159,7 +169,8 @@ function displayResults() {
   document.getElementById('detail-list').innerHTML = detailsList;
 }
 
-renderQuestion();
+// 初始化
+renderQuestion();  // 初次渲染第一个问题
 </script>
 
 </body>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>基因行为测验问卷</title>
+  <title>行为分析测验问卷</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: "微软雅黑", sans-serif; padding: 20px; background: #f7f9fc; max-width: 720px; margin: auto; }
@@ -25,7 +25,7 @@
 </head>
 <body>
 
-<h1>基因行为测验问卷</h1>
+<h1>行为分析测验问卷</h1>
 
 <div id="question-container"></div>
 
@@ -47,7 +47,7 @@
 </div>
 
 <script>
-// 维度标签与基因对应
+// 维度标签与行为分析对应
 const dimensionLabels = {
   EmotionalStability: '情绪稳定性',
   Sociability: '社交性',
@@ -57,7 +57,7 @@ const dimensionLabels = {
   StressResilience: '抗压能力'
 };
 
-// 12个问题与基因对应评分
+// 12个问题与得分规则
 const questions = [
   { q: "当你面对挫折时，你通常会？", options: [
     { text: "快速调整情绪，积极应对", scores: { EmotionalStability: 8, StressResilience: 7 } },
@@ -191,7 +191,7 @@ function displayResults() {
     data: {
       labels: Object.values(dimensionLabels),
       datasets: [{
-        label: '基因评分',
+        label: '行为评分',
         data: Object.values(totalScores),
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         borderColor: 'rgba(255, 99, 132, 1)',
@@ -212,11 +212,11 @@ function displayResults() {
 
   let summaryText = '';
   if (totalScore > 70) {
-    summaryText = '整体心理基因表现良好，具备较强的情绪调节和社交能力，适应环境和压力的能力较强。';
+    summaryText = '整体心理表现良好，具备较强的情绪调节和社交能力，适应环境和压力的能力较强。';
   } else if (totalScore > 40) {
-    summaryText = '心理基因表现中等，有一定优势，但部分维度存在提升空间，建议关注情绪和注意力管理。';
+    summaryText = '心理表现中等，有一定优势，但部分维度存在提升空间，建议关注情绪和注意力管理。';
   } else {
-    summaryText = '心理基因表现偏低，可能易感情绪波动或注意力不集中，建议加强心理健康和抗压能力。';
+    summaryText = '表现偏低，可能易感情绪波动或注意力不集中，建议加强心理健康和抗压能力。';
   }
   document.getElementById('summary-text').textContent = summaryText;
 

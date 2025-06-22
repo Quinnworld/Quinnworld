@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>心理测评系统示范（趣味分享版）</title>
+<title>12秒•趣问答</title>
 <style>
   body {
     max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif;

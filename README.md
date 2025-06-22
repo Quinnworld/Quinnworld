@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>外貌基因型智能推断测评</title>
+<title>趣味个性发展报告</title>
 <style>
   body { max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif; background: #fff; padding: 20px; color:#000; }
   h2,h3 { text-align:center; }
@@ -68,114 +68,114 @@ function shuffle(arr) {
   return arr;
 }
 
-// 12道外貌相关基因题库（示例，真实应用建议结合专业遗传学文献完善）
-const geneQuestions = [
+// 12题外貌基因题库（每选项可对应多个基因型和权重）
+const geneQuestionBank = [
   {
-    id: "Q1", gene: "MC1R", text: "你的头发颜色最接近？",
+    question: "你的头发颜色？",
     options: [
-      { text: "深黑/黑色", genotype: "MC1R:WT/WT", score: 2 },
-      { text: "棕色", genotype: "MC1R:WT/V", score: 1 },
-      { text: "深棕/浅棕", genotype: "MC1R:V/V", score: 0 },
-      { text: "红色/偏红", genotype: "MC1R:V/V", score: -1 }
+      { text: "黑色", genotypes: { MC1R: { "WT/WT": 2, "WT/V": 1 }, OCA2: { "AA": 1 } } },
+      { text: "棕色", genotypes: { MC1R: { "WT/V": 2, "V/V": 1 }, OCA2: { "AG": 1 } } },
+      { text: "金色", genotypes: { MC1R: { "V/V": 2 }, OCA2: { "GG": 2 } } },
+      { text: "红色", genotypes: { MC1R: { "V/V": 3 }, OCA2: { "GG": 1 } } }
     ]
   },
   {
-    id: "Q2", gene: "OCA2", text: "你的眼睛颜色？",
+    question: "你的眼睛颜色？",
     options: [
-      { text: "深棕/黑色", genotype: "OCA2:AA", score: 2 },
-      { text: "棕色", genotype: "OCA2:AG", score: 1 },
-      { text: "浅褐/绿色", genotype: "OCA2:GG", score: 0 },
-      { text: "蓝色/灰色", genotype: "OCA2:GG", score: -1 }
+      { text: "黑色", genotypes: { OCA2: { "AA": 2 }, HERC2: { "AA": 2 } } },
+      { text: "棕色", genotypes: { OCA2: { "AG": 2 }, HERC2: { "AG": 2 } } },
+      { text: "绿色", genotypes: { OCA2: { "GG": 2 }, HERC2: { "GG": 1 } } },
+      { text: "蓝色", genotypes: { OCA2: { "GG": 3 }, HERC2: { "GG": 2 } } }
     ]
   },
   {
-    id: "Q3", gene: "SLC45A2", text: "你的皮肤在夏天暴晒后？",
+    question: "你的皮肤在夏天暴晒后？",
     options: [
-      { text: "很容易晒黑", genotype: "SLC45A2:AA", score: 2 },
-      { text: "容易晒黑", genotype: "SLC45A2:AG", score: 1 },
-      { text: "不易晒黑", genotype: "SLC45A2:GG", score: 0 },
-      { text: "晒不黑，易晒伤", genotype: "SLC45A2:GG", score: -1 }
+      { text: "很容易晒黑", genotypes: { SLC45A2: { "AA": 2 }, SLC24A5: { "AA": 1 } } },
+      { text: "容易晒黑", genotypes: { SLC45A2: { "AG": 2 }, SLC24A5: { "AG": 1 } } },
+      { text: "不易晒黑", genotypes: { SLC45A2: { "GG": 2 }, SLC24A5: { "GG": 1 } } },
+      { text: "晒不黑，易晒伤", genotypes: { SLC45A2: { "GG": 2 }, SLC24A5: { "GG": 2 } } }
     ]
   },
   {
-    id: "Q4", gene: "EDAR", text: "你的头发质地？",
+    question: "你的头发质地？",
     options: [
-      { text: "粗硬直发", genotype: "EDAR:AA", score: 2 },
-      { text: "偏硬直发", genotype: "EDAR:AG", score: 1 },
-      { text: "柔软直发", genotype: "EDAR:GG", score: 0 },
-      { text: "自然卷/波浪", genotype: "EDAR:GG", score: -1 }
+      { text: "粗硬直发", genotypes: { EDAR: { "AA": 2 }, KRT71: { "CC": 1 } } },
+      { text: "偏硬直发", genotypes: { EDAR: { "AG": 2 }, KRT71: { "CT": 1 } } },
+      { text: "柔软直发", genotypes: { EDAR: { "GG": 2 }, KRT71: { "TT": 1 } } },
+      { text: "自然卷/波浪", genotypes: { EDAR: { "GG": 2 }, KRT71: { "TT": 2 } } }
     ]
   },
   {
-    id: "Q5", gene: "FGFR2", text: "你鼻梁高度？",
+    question: "你的鼻梁高度？",
     options: [
-      { text: "高鼻梁", genotype: "FGFR2:AA", score: 2 },
-      { text: "较高", genotype: "FGFR2:AG", score: 1 },
-      { text: "中等", genotype: "FGFR2:GG", score: 0 },
-      { text: "低鼻梁", genotype: "FGFR2:GG", score: -1 }
+      { text: "高鼻梁", genotypes: { FGFR2: { "AA": 2 }, PAX3: { "AA": 1 } } },
+      { text: "较高", genotypes: { FGFR2: { "AG": 2 }, PAX3: { "AG": 1 } } },
+      { text: "中等", genotypes: { FGFR2: { "GG": 2 }, PAX3: { "GG": 1 } } },
+      { text: "低鼻梁", genotypes: { FGFR2: { "GG": 2 }, PAX3: { "GG": 2 } } }
     ]
   },
   {
-    id: "Q6", gene: "ABCC11", text: "你的耳垢类型？",
+    question: "你的耳垢类型？",
     options: [
-      { text: "湿耳垢", genotype: "ABCC11:GG", score: 2 },
-      { text: "偏湿", genotype: "ABCC11:GA", score: 1 },
-      { text: "偏干", genotype: "ABCC11:AA", score: 0 },
-      { text: "干耳垢", genotype: "ABCC11:AA", score: -1 }
+      { text: "湿耳垢", genotypes: { ABCC11: { "GG": 2 } } },
+      { text: "偏湿", genotypes: { ABCC11: { "GA": 2 } } },
+      { text: "偏干", genotypes: { ABCC11: { "AA": 1 } } },
+      { text: "干耳垢", genotypes: { ABCC11: { "AA": 2 } } }
     ]
   },
   {
-    id: "Q7", gene: "ASIP", text: "你皮肤色素沉着情况？",
+    question: "你皮肤色素沉着情况？",
     options: [
-      { text: "色素较深", genotype: "ASIP:AA", score: 2 },
-      { text: "中等", genotype: "ASIP:AG", score: 1 },
-      { text: "较浅", genotype: "ASIP:GG", score: 0 },
-      { text: "极浅", genotype: "ASIP:GG", score: -1 }
+      { text: "色素较深", genotypes: { ASIP: { "AA": 2 } } },
+      { text: "中等", genotypes: { ASIP: { "AG": 2 } } },
+      { text: "较浅", genotypes: { ASIP: { "GG": 1 } } },
+      { text: "极浅", genotypes: { ASIP: { "GG": 2 } } }
     ]
   },
   {
-    id: "Q8", gene: "TYR", text: "你有雀斑吗？",
+    question: "你有雀斑吗？",
     options: [
-      { text: "明显", genotype: "TYR:AA", score: 2 },
-      { text: "有一些", genotype: "TYR:AG", score: 1 },
-      { text: "很少", genotype: "TYR:GG", score: 0 },
-      { text: "基本没有", genotype: "TYR:GG", score: -1 }
+      { text: "明显", genotypes: { TYR: { "AA": 2 }, IRF4: { "TT": 1 } } },
+      { text: "有一些", genotypes: { TYR: { "AG": 2 }, IRF4: { "CT": 1 } } },
+      { text: "很少", genotypes: { TYR: { "GG": 1 }, IRF4: { "CC": 1 } } },
+      { text: "基本没有", genotypes: { TYR: { "GG": 2 }, IRF4: { "CC": 2 } } }
     ]
   },
   {
-    id: "Q9", gene: "HERC2", text: "你家族中有蓝眼睛成员吗？",
+    question: "你家族中有蓝眼睛成员吗？",
     options: [
-      { text: "有且比例高", genotype: "HERC2:GG", score: 2 },
-      { text: "有部分", genotype: "HERC2:AG", score: 1 },
-      { text: "极少", genotype: "HERC2:AA", score: 0 },
-      { text: "没有", genotype: "HERC2:AA", score: -1 }
+      { text: "有且比例高", genotypes: { HERC2: { "GG": 2 } } },
+      { text: "有部分", genotypes: { HERC2: { "AG": 2 } } },
+      { text: "极少", genotypes: { HERC2: { "AA": 1 } } },
+      { text: "没有", genotypes: { HERC2: { "AA": 2 } } }
     ]
   },
   {
-    id: "Q10", gene: "SLC24A5", text: "你的肤色属于？",
+    question: "你的肤色属于？",
     options: [
-      { text: "深色", genotype: "SLC24A5:AA", score: 2 },
-      { text: "中等", genotype: "SLC24A5:AG", score: 1 },
-      { text: "浅色", genotype: "SLC24A5:GG", score: 0 },
-      { text: "非常浅", genotype: "SLC24A5:GG", score: -1 }
+      { text: "深色", genotypes: { SLC24A5: { "AA": 2 } } },
+      { text: "中等", genotypes: { SLC24A5: { "AG": 2 } } },
+      { text: "浅色", genotypes: { SLC24A5: { "GG": 1 } } },
+      { text: "非常浅", genotypes: { SLC24A5: { "GG": 2 } } }
     ]
   },
   {
-    id: "Q11", gene: "KRT71", text: "你的头发卷曲程度？",
+    question: "你的头发卷曲程度？",
     options: [
-      { text: "非常卷", genotype: "KRT71:TT", score: 2 },
-      { text: "中度卷", genotype: "KRT71:CT", score: 1 },
-      { text: "微卷", genotype: "KRT71:CC", score: 0 },
-      { text: "直发", genotype: "KRT71:CC", score: -1 }
+      { text: "非常卷", genotypes: { KRT71: { "TT": 2 } } },
+      { text: "中度卷", genotypes: { KRT71: { "CT": 2 } } },
+      { text: "微卷", genotypes: { KRT71: { "CC": 1 } } },
+      { text: "直发", genotypes: { KRT71: { "CC": 2 } } }
     ]
   },
   {
-    id: "Q12", gene: "TP63", text: "你的唇型属于？",
+    question: "你的唇型属于？",
     options: [
-      { text: "厚唇", genotype: "TP63:AA", score: 2 },
-      { text: "中厚", genotype: "TP63:AG", score: 1 },
-      { text: "中等", genotype: "TP63:GG", score: 0 },
-      { text: "薄唇", genotype: "TP63:GG", score: -1 }
+      { text: "厚唇", genotypes: { TP63: { "AA": 2 } } },
+      { text: "中厚", genotypes: { TP63: { "AG": 2 } } },
+      { text: "中等", genotypes: { TP63: { "GG": 1 } } },
+      { text: "薄唇", genotypes: { TP63: { "GG": 2 } } }
     ]
   }
 ];
@@ -184,8 +184,7 @@ let currentIndex = 0;
 let selectedOptions = [];
 let shuffledQuestions = [];
 let shuffledOptionsList = [];
-let geneScores = {};
-let geneTypeResult = {};
+let genotypeScores = {};
 let userHasPaid = false;
 
 const sectionUserInfo = document.getElementById("sectionUserInfo");
@@ -215,7 +214,7 @@ function selectOption(idx) {
 function renderQuestion(index) {
   currentIndex = index;
   const q = shuffledQuestions[index];
-  qTextEl.textContent = q.text;
+  qTextEl.textContent = q.question;
   optionsEl.innerHTML = "";
   btnNext.disabled = selectedOptions[index] == null;
   btnPrev.disabled = index === 0;
@@ -235,117 +234,95 @@ function renderQuestion(index) {
   progressText.textContent = `第 ${index+1} / ${shuffledQuestions.length} 题`;
 }
 
-function calculateGeneScores() {
-  geneScores = {};
+function calculateGenotypeScores() {
+  genotypeScores = {};
   shuffledQuestions.forEach((q, qIdx) => {
     const optIdx = selectedOptions[qIdx];
     if(optIdx == null) return;
     const origIdx = shuffledOptionsList[qIdx][optIdx].origIdx;
     const opt = q.options[origIdx];
-    geneScores[q.gene] = (geneScores[q.gene] || 0) + opt.score;
+    for (let gene in opt.genotypes) {
+      for (let gt in opt.genotypes[gene]) {
+        const key = `${gene}:${gt}`;
+        genotypeScores[key] = (genotypeScores[key] || 0) + opt.genotypes[gene][gt];
+      }
+    }
   });
-
-  // 联动/交互效应举例：如果Q1和Q6都选高分，MC1R和ABCC11的变异概率提升
-  // 这里只做简单示范，实际可用更复杂的贝叶斯/决策树
-  if(selectedOptions[0]!=null && selectedOptions[5]!=null){
-    const q1Score = shuffledOptionsList[0][selectedOptions[0]].score;
-    const q6Score = shuffledOptionsList[5][selectedOptions[5]].score;
-    if(q1Score>=1 && q6Score>=1) geneScores["MC1R"] += 1;
-  }
 }
 
-function inferGeneTypes() {
-  geneTypeResult = {};
-  // 简化推断规则：得分>=2为变异型，否则为野生型或常见型
-  for (let gene in geneScores) {
-    if (geneScores[gene] >= 2) {
-      geneTypeResult[gene] = "变异型/特殊型";
-    } else if (geneScores[gene] >= 1) {
-      geneTypeResult[gene] = "杂合型/部分变异";
-    } else {
-      geneTypeResult[gene] = "常见型/野生型";
+function getTopGenotypePerGene() {
+  // 按每个基因，选分数最高的基因型
+  let geneTypeResult = {};
+  let geneTypeScore = {};
+  for (let key in genotypeScores) {
+    const [gene, gt] = key.split(":");
+    if (!geneTypeScore[gene] || genotypeScores[key] > geneTypeScore[gene]) {
+      geneTypeScore[gene] = genotypeScores[key];
+      geneTypeResult[gene] = gt;
     }
   }
+  return geneTypeResult;
 }
 
-function generateGeneResultText() {
+function generateGeneResultText(geneTypeResult) {
   let text = "";
-  for (let i = 0; i < shuffledQuestions.length; i++) {
-    const q = shuffledQuestions[i];
-    text += `${q.gene}：${geneTypeResult[q.gene]}\n`;
+  for (let gene in geneTypeResult) {
+    text += `${gene}：${geneTypeResult[gene]}\n`;
   }
   return text;
 }
 
-function generateBasicReport() {
+function generateBasicReport(geneTypeResult) {
   let report = "";
   for (let gene in geneTypeResult) {
+    const gt = geneTypeResult[gene];
     if (gene === "MC1R") {
-      report += geneTypeResult[gene] === "变异型/特殊型"
-        ? "MC1R变异型：红发或浅色发色倾向，皮肤较白，防晒需加强。\n"
-        : "MC1R常见型：深色发色，紫外线抵抗力较好。\n";
+      report += gt.includes("V") ? "MC1R变异：浅色/红发概率高，注意防晒。\n" : "MC1R常见型：深色发色，紫外线抵抗力较好。\n";
     }
     if (gene === "OCA2") {
-      report += geneTypeResult[gene] === "变异型/特殊型"
-        ? "OCA2变异型：浅色（蓝/灰/绿）眼睛概率高，注意眼部防护。\n"
-        : "OCA2常见型：深色眼睛，黑色素较多。\n";
+      report += gt === "GG" ? "OCA2变异：浅色眼睛概率高，注意眼部防护。\n" : "OCA2常见型：深色眼睛，黑色素较多。\n";
     }
     if (gene === "SLC45A2") {
-      report += geneTypeResult[gene] === "变异型/特殊型"
-        ? "SLC45A2变异型：皮肤较白，易晒伤，注意防晒。\n"
-        : "SLC45A2常见型：皮肤偏深，耐晒能力强。\n";
+      report += gt === "GG" ? "SLC45A2变异：皮肤较白，易晒伤，注意防晒。\n" : "SLC45A2常见型：皮肤偏深，耐晒能力强。\n";
     }
     if (gene === "EDAR") {
-      report += geneTypeResult[gene] === "变异型/特殊型"
-        ? "EDAR变异型：头发粗硬直，汗腺发达，牙齿形态特殊。\n"
-        : "EDAR常见型：头发柔软，汗腺发育一般。\n";
+      report += gt === "AA" ? "EDAR变异：头发粗硬直，汗腺发达，牙齿形态特殊。\n" : "EDAR常见型：头发柔软，汗腺发育一般。\n";
     }
     if (gene === "FGFR2") {
-      report += geneTypeResult[gene] === "变异型/特殊型"
-        ? "FGFR2变异型：高鼻梁特征明显，面部立体感强。\n"
-        : "FGFR2常见型：鼻梁中等或偏低，五官柔和。\n";
+      report += gt === "AA" ? "FGFR2变异：高鼻梁特征明显，面部立体感强。\n" : "FGFR2常见型：鼻梁中等或偏低，五官柔和。\n";
     }
     if (gene === "ABCC11") {
-      report += geneTypeResult[gene] === "变异型/特殊型"
-        ? "ABCC11变异型：湿耳垢型，腋臭概率高，注意个人护理。\n"
-        : "ABCC11常见型：干耳垢，体味轻。\n";
+      report += gt === "GG" ? "ABCC11变异：湿耳垢型，腋臭概率高，注意个人护理。\n" : "ABCC11常见型：干耳垢，体味轻。\n";
     }
     if (gene === "ASIP") {
-      report += geneTypeResult[gene] === "变异型/特殊型"
-        ? "ASIP变异型：肤色较深，色素沉着明显。\n"
-        : "ASIP常见型：肤色浅，色素沉着少。\n";
+      report += gt === "AA" ? "ASIP变异：肤色较深，色素沉着明显。\n" : "ASIP常见型：肤色浅，色素沉着少。\n";
     }
     if (gene === "TYR") {
-      report += geneTypeResult[gene] === "变异型/特殊型"
-        ? "TYR变异型：雀斑概率高，注意皮肤护理和防晒。\n"
-        : "TYR常见型：雀斑少，皮肤均匀。\n";
+      report += gt === "AA" ? "TYR变异：雀斑概率高，注意皮肤护理和防晒。\n" : "TYR常见型：雀斑少，皮肤均匀。\n";
     }
     if (gene === "HERC2") {
-      report += geneTypeResult[gene] === "变异型/特殊型"
-        ? "HERC2变异型：蓝眼睛概率高，注意光线保护。\n"
-        : "HERC2常见型：棕色或深色眼睛。\n";
+      report += gt === "GG" ? "HERC2变异：蓝眼睛概率高，注意光线保护。\n" : "HERC2常见型：棕色或深色眼睛。\n";
     }
     if (gene === "SLC24A5") {
-      report += geneTypeResult[gene] === "变异型/特殊型"
-        ? "SLC24A5变异型：皮肤极浅，需注意紫外线防护。\n"
-        : "SLC24A5常见型：肤色中等或偏深。\n";
+      report += gt === "GG" ? "SLC24A5变异：皮肤极浅，需注意紫外线防护。\n" : "SLC24A5常见型：肤色中等或偏深。\n";
     }
     if (gene === "KRT71") {
-      report += geneTypeResult[gene] === "变异型/特殊型"
-        ? "KRT71变异型：头发卷曲度高，易打理。\n"
-        : "KRT71常见型：头发直或微卷。\n";
+      report += gt === "TT" ? "KRT71变异：头发卷曲度高，易打理。\n" : "KRT71常见型：头发直或微卷。\n";
     }
     if (gene === "TP63") {
-      report += geneTypeResult[gene] === "变异型/特殊型"
-        ? "TP63变异型：厚唇，面部立体感强。\n"
-        : "TP63常见型：薄唇或中等唇型。\n";
+      report += gt === "AA" ? "TP63变异：厚唇，面部立体感强。\n" : "TP63常见型：薄唇或中等唇型。\n";
+    }
+    if (gene === "PAX3") {
+      report += gt === "AA" ? "PAX3变异：鼻梁较高，面部立体感强。\n" : "PAX3常见型：鼻梁中等或偏低。\n";
+    }
+    if (gene === "IRF4") {
+      report += gt === "TT" ? "IRF4变异：雀斑概率高，注意皮肤护理。\n" : "IRF4常见型：雀斑少。\n";
     }
   }
   return report;
 }
 
 function generatePremiumReport() {
-  // 深度报告可结合更多交互、遗传风险、健康建议等
   return "这是基于你答题结果和最新外貌基因科学的深度发展报告，涵盖健康、护理、个性化美学建议等内容。\n（如需定制，请联系专业遗传咨询师）";
 }
 
@@ -353,7 +330,7 @@ btnStart.onclick = () => {
   const age = parseInt(document.getElementById("inputAge").value);
   if(isNaN(age) || age < 0) { alert("请输入有效年龄"); return; }
   selectedOptions = [];
-  shuffledQuestions = shuffle(geneQuestions.map(q => ({...q, options: q.options.slice()})));
+  shuffledQuestions = shuffle(geneQuestionBank.map(q => ({...q, options: q.options.slice()})));
   shuffledOptionsList = [];
   currentIndex = 0;
   sectionUserInfo.style.display = "none";
@@ -370,9 +347,9 @@ btnNext.onclick = () => {
   if(currentIndex < shuffledQuestions.length - 1) {
     renderQuestion(currentIndex + 1);
   } else {
-    calculateGeneScores();
-    inferGeneTypes();
-    renderResult();
+    calculateGenotypeScores();
+    const geneTypeResult = getTopGenotypePerGene();
+    renderResult(geneTypeResult);
   }
 };
 
@@ -380,13 +357,13 @@ btnPrev.onclick = () => {
   if(currentIndex > 0) renderQuestion(currentIndex - 1);
 };
 
-function renderResult() {
+function renderResult(geneTypeResult) {
   sectionQuiz.style.display = "none";
   sectionResult.style.display = "block";
   userHasPaid = false;
   paySection.style.display = "none";
-  geneResultEl.textContent = generateGeneResultText();
-  basicReportEl.textContent = generateBasicReport();
+  geneResultEl.textContent = generateGeneResultText(geneTypeResult);
+  basicReportEl.textContent = generateBasicReport(geneTypeResult);
   premiumReportEl.textContent = "点击生成深度报告";
 }
 

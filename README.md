@@ -379,4 +379,33 @@
     sectionQuiz.style.display = "none";
     sectionResult.style.display = "block";
 
-    const normalizedScores = geneDimensions.map(dim
+    const normalizedScores = geneDimensions.map(dim => {
+      const raw = tagScores[dim.key] || 0;
+      let norm = (raw + 8) / 16 * 100;
+      norm = Math.min(100, Math.max(0, norm));
+      return +norm.toFixed(1);
+    });
+
+    const totalScoreRaw = normalizedScores.reduce((a, b) => a + b, 0) / normalizedScores.length;
+    const totalScore = totalScoreRaw.toFixed(1);
+    totalScoreText.textContent = `总分: ${totalScore}`;
+
+    drawRadarChart(tagScores, age, gender);
+
+    let prompt = `Age: ${age}, Gender: ${gender === "male" ? "Male" : "Female"}\n`;
+    geneDimensions.forEach((dim, idx) => {
+      prompt += `${dim.label}: ${normalizedScores[idx]} / 100\n`;
+    });
+
+    promptOutput.textContent = prompt.trim();
+  }
+
+  promptOutput.onclick = () => {
+    navigator.clipboard.writeText(promptOutput.textContent).then(() => {
+      alert("已复制Prompt文本");
+    });
+  };
+</script>
+
+</body>
+</html>

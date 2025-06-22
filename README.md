@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>因•趣问答完整版（2025心理科学版）</title>
+<title>因•趣问答完整版（专业深度解析）</title>
 <style>
   body {
     max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif;
@@ -39,11 +39,11 @@
   .option.selected {
     background: #4f46e5; color: white; border-color: #4338ca;
   }
-  #promptOutput, #basicAnalysis, #premiumAnalysis {
+  pre {
     white-space: pre-wrap; word-break: break-word;
     background: #eee; padding: 10px; border-radius: 6px;
     font-family: monospace;
-    user-select: all; /* 方便复制 */
+    user-select: all;
     cursor: default;
   }
   #premiumAnalysis {
@@ -71,7 +71,7 @@
 </head>
 <body>
 
-<h2>趣问答 & 因得分完整版（2025心理科学版）</h2>
+<h2>趣问答 & 因得分完整版（专业深度解析）</h2>
 
 <div id="sectionUserInfo">
   <label for="inputAge">年龄（不限）</label>
@@ -218,6 +218,7 @@
   const radarCanvas = document.getElementById("radarChart");
   const ctx = radarCanvas.getContext("2d");
 
+  // 固定白色背景，去掉渐变
   function updateBackgroundColor() {
     document.body.style.backgroundColor = "#fff";
   }
@@ -349,7 +350,6 @@
     return (norm * 100).toFixed(1);
   }
 
-  // 基于2025心理科学进展的初步版个性解析
   function generateBasicAnalysis(scores) {
     let parts = [];
     for (const dim of geneDimensions) {
@@ -361,18 +361,22 @@
     return parts.join("，") + "。";
   }
 
-  // 结合最新心理科学研究成果的深度版个性解析示范
   function generatePremiumAnalysis(scores) {
-    return `深度解析报告（基于2025心理科学进展）：
+    return `深度解析报告（基于最新心理与基因科学研究）：
 
-- 外向性：${scores.extraversion || 0}。研究表明，外向性高的人更善于建立人际关系，能有效利用社会支持缓解压力。
-- 情绪稳定性：${scores.emotion_stability || 0}。情绪稳定性关联认知偏差矫正能力，影响个体面对逆境时的心理弹性。
-- 新奇寻求：${scores.novelty_seek || 0}。新奇寻求高者倾向于探索创新，适应快速变化的环境，但也需注意冲动控制。
-- 责任感：${scores.responsibility || 0}。责任感强的人在任务完成和自我管理上表现突出，有利于职业发展和生活规划。
-- 自控力：${scores.self_control || 0}。自控力是心理健康的重要指标，关联成瘾行为防治和情绪调节能力。
-- 开放性：${scores.openness || 0}。开放性高的人更容易接受新观点，促进学习和创造力的发展。
+- 外向性较高的人通常表现出更强的社交能力和积极情绪，这与大脑中调控奖赏和社交行为的神经机制密切相关。研究显示，这类个体在面对社交环境时，神经活动更为活跃，能够更好地适应复杂的人际互动。
 
-本报告基于最新心理学研究成果，如认知偏差矫正训练、情绪调节机制和行为成瘾防治策略，帮助你更深入理解自身个性特点。欲获取完整专业报告，请购买深度解析服务。`;
+- 情绪稳定性反映了个体在面对压力和负面情绪时的调节能力。最新研究表明，情绪稳定性较高的人拥有更有效的神经调控网络，能够迅速恢复情绪平衡，减少焦虑和抑郁的风险。
+
+- 新奇寻求倾向于探索未知和接受新体验，这种特质与大脑中处理奖励和风险评估的区域功能增强相关。高新奇寻求者更容易产生创造力和适应环境变化的能力，但也需注意冲动行为的管理。
+
+- 责任感体现了个体的自我约束和计划执行能力。科学研究发现，责任感强的人在执行功能相关脑区表现出更高的活跃度，能够更好地管理时间和资源，完成目标任务。
+
+- 自控力是调节冲动和情绪的重要能力。具备较强自控力的个体，神经系统在冲动抑制和情绪调节方面表现出更高效的运作，这有助于维护心理健康和促进长期目标的达成。
+
+- 开放性反映了个体对新观点和多样文化的接受程度。高开放性的人通常具有更灵活的认知结构和更丰富的想象力，这种特质有助于学习和创新，推动个人成长。
+
+本报告基于最新的神经科学和行为遗传学研究，为你提供科学且深入的个性理解，助力你更好地认识自我，提升生活和工作的质量。欲获取更详细的个性发展建议和定制化指导，请购买完整深度解析服务。`;
   }
 
   function setScoreTextColor(total) {
@@ -443,8 +447,7 @@
     premiumAnalysisEl.style.cursor = "pointer";
     premiumAnalysisEl.onclick = () => {
       alert("付费功能暂未开通，敬请期待！");
-      // 这里可接入支付或跳转购买流程
-      // 例如：window.location.href = "支付页面URL";
+      // 可接入支付流程
     };
   }
 

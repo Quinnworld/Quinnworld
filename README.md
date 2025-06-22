@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>12秒•趣问答</title>
+<title>心理测评系统示范（优点发掘版）</title>
 <style>
   body {
     max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif;
@@ -60,7 +60,7 @@
 </head>
 <body>
 
-<h2>心理测评系统示范（趣味分享版）</h2>
+<h2>心理测评系统示范（优点发掘版）</h2>
 
 <div id="sectionUserInfo">
   <label for="inputAge">年龄</label>
@@ -90,7 +90,7 @@
   <h3>深度解析（付费）</h3>
   <pre id="premiumAnalysis" title="点击生成深度解析">点击生成深度解析</pre>
 
-  <!-- 新增分享和邀请按钮 -->
+  <!-- 分享和邀请按钮 -->
   <div style="text-align:center; margin-top:15px;">
     <button id="btnShare" style="background:#10b981; margin-right:10px;">生成趣味分享卡</button>
     <button id="btnInvite" style="background:#3b82f6;">邀请好友解锁深度解析</button>
@@ -259,34 +259,45 @@
     return (norm * 100).toFixed(1);
   }
 
-  // 生成基础解析和发展建议
+  // 新版：发掘优点并给出综合发展建议
   function generateBasicAnalysisWithAdvice(scores) {
     const advices = [];
+    const strengths = [];
+
     const { extraversion=0, emotion_stability=0, novelty_seek=0, responsibility=0, self_control=0, openness=0 } = scores;
 
-    if (extraversion >= 6) advices.push("外向性较强，建议多参与领导和社交活动，发挥优势。");
-    else if (extraversion <= -6) advices.push("外向性较低，建议适当尝试小范围社交，逐步提升沟通能力。");
-    else advices.push("外向性适中，保持灵活社交，平衡内外向特点。");
+    // 发掘优点
+    if (extraversion >= 6) strengths.push("你外向开朗，善于沟通和社交，能够积极影响周围人。");
+    else if (extraversion <= -6) strengths.push("你内敛沉稳，善于倾听和深度思考，具有独特的观察力。");
 
-    if (emotion_stability >= 6) advices.push("情绪稳定，适合承担压力较大的工作，注意保持心理健康。");
-    else if (emotion_stability <= -6) advices.push("情绪波动较大，建议学习情绪管理和压力缓解技巧。");
-    else advices.push("情绪较为平稳，继续保持良好情绪调节习惯。");
+    if (emotion_stability >= 6) strengths.push("你情绪稳定，具备良好的压力管理能力，能够冷静应对挑战。");
+    else if (emotion_stability <= -6) strengths.push("你情感细腻，富有同理心，能够敏锐感知他人情绪。");
 
-    if (novelty_seek >= 6) advices.push("喜欢新奇和变化，适合创新型岗位，注意冲动控制。");
-    else if (novelty_seek <= -6) advices.push("偏好稳定，适合结构化环境，尝试适度接受新事物。");
-    else advices.push("新奇寻求适中，能较好适应环境变化。");
+    if (novelty_seek >= 6) strengths.push("你富有好奇心和创新精神，乐于尝试新事物和突破自我。");
+    else if (novelty_seek <= -6) strengths.push("你喜欢稳定和安全，注重细节和规划，适合踏实稳健的工作。");
 
-    if (responsibility >= 6) advices.push("责任感强，适合管理和执行岗位，保持高效工作习惯。");
-    else if (responsibility <= -6) advices.push("责任感稍弱，建议培养计划性和时间管理能力。");
-    else advices.push("责任感适中，能较好完成任务。");
+    if (responsibility >= 6) strengths.push("你责任感强，做事认真负责，是团队的中坚力量。");
+    else if (responsibility <= -6) strengths.push("你灵活适应，能够在变化中寻找机会，具备创造性思维。");
 
-    if (self_control >= 6) advices.push("自控力强，有利于长期目标坚持和情绪管理。");
-    else if (self_control <= -6) advices.push("自控力较弱，建议练习冲动控制和情绪调节技巧。");
-    else advices.push("自控力适中，保持良好习惯。");
+    if (self_control >= 6) strengths.push("你自控力强，能够坚持长期目标，善于管理时间和情绪。");
+    else if (self_control <= -6) strengths.push("你直觉敏锐，反应迅速，适合快速决策和应对突发状况。");
 
-    if (openness >= 6) advices.push("开放性高，适合学习和创新，建议多参与跨领域交流。");
-    else if (openness <= -6) advices.push("开放性较低，适合稳定环境，尝试拓展视野。");
-    else advices.push("开放性适中，兼具创新与稳定。");
+    if (openness >= 6) strengths.push("你思想开放，乐于学习和接受新观点，具备跨界整合能力。");
+    else if (openness <= -6) strengths.push("你专注深耕，注重专业知识积累，能够成为某一领域的专家。");
+
+    if (strengths.length === 0) {
+      strengths.push("你的性格特点均衡，具备多方面的潜力和适应力。");
+    }
+
+    advices.push("【你的优势】");
+    advices.push(strengths.join("\n"));
+
+    // 综合发展建议
+    advices.push("\n【发展建议】");
+    advices.push("1. 充分发挥你的优势，选择适合自己性格特点的工作和生活方式。");
+    advices.push("2. 针对较弱的维度，尝试适度锻炼和提升，例如学习情绪管理或增强自控力。");
+    advices.push("3. 保持开放心态，积极接受反馈和新挑战，促进个人成长。");
+    advices.push("4. 注重身心健康，合理安排工作与休息，保持良好状态。");
 
     return advices.join("\n");
   }
@@ -398,7 +409,7 @@
     }, 1500);
   };
 
-  // 新增分享按钮事件
+  // 分享按钮事件
   btnShare.onclick = () => {
     const totalScore = computeTotalScore(tagScores);
     let funDesc = "";
@@ -414,7 +425,7 @@
     alert("分享卡已生成，长按复制内容分享到朋友圈或好友！");
   };
 
-  // 新增邀请按钮事件
+  // 邀请按钮事件
   btnInvite.onclick = () => {
     if (userHasPaid) {
       alert("您已解锁深度解析，无需邀请好友。");

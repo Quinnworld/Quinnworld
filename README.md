@@ -278,7 +278,7 @@
     progressText.textContent = `第 ${questionCount+1} / ${maxQuestions} 题`;
   }
 
-  // 下一题
+  // 下一题按钮点击事件
   btnNext.onclick = ()=>{
     if(selectedOptionIndex === null) return;
     // 叠加标签分数
@@ -351,48 +351,43 @@
     const adjustedTags = ageGenderAdjust(tagScores, age, gender);
     tagScoresOutput.textContent = JSON.stringify(adjustedTags, null, 2);
 
-    // 简要解读
-    let interp = "";
-    for(let tag of geneTags){
-      const val = adjustedTags[tag] || 0;
-      if(val > 1){
-        interp += `你的${tag}得分较高，表现为积极特征。\n`;
-      } else if(val < -1){
-        interp += `你的${tag}得分较低，表现为消极倾向。\n`;
-      } else {
-        interp += `你的${tag}得分中等，表现较为平衡。\n`;
-      }
+    // 简单解读
+    let interpretation = [];
+    for(let t of geneTags){
+      let v = adjustedTags[t] || 0;
+      if(v > 1) interpretation.push(`${t}：高`);
+      else if(v < -1) interpretation.push(`${t}：低`);
+      else interpretation.push(`${t}：中等`);
     }
-    interpretationEl.textContent = interp;
+    interpretationEl.innerHTML = interpretation.map(s=>`<div>${s}</div>`).join("");
 
+    // 生成Prompt
     promptOutput.textContent = generatePrompt(adjustedTags);
   }
 
-  // 重新开始
-  btnRestart.onclick = ()=>{
-    tagScores = {};
-    askedIds.clear();
-    questionCount = 0;
-    sectionResult.style.display = "none";
-    sectionUserInfo.style.display = "block";
-  };
-
+  // 开始答题按钮
   btnStart.onclick = ()=>{
     age = parseInt(inputAge.value);
+    gender = selectGender.value;
     if(isNaN(age) || age < 18 || age > 80){
-      alert("请输入有效年龄（18-80）");
+      alert("请输入有效的年龄（18-80）");
       return;
     }
-    gender = selectGender.value;
     tagScores = {};
     askedIds.clear();
     questionCount = 0;
     sectionUserInfo.style.display = "none";
+    sectionResult.style.display = "none";
     sectionQuiz.style.display = "block";
-    const firstQ = questionPool[Math.floor(Math.random()*questionPool.length)];
+    const firstQ = selectNextQuestion();
     renderQuestion(firstQ);
   };
 
+  // 重新开始按钮
+  btnRestart.onclick = ()=>{
+    sectionResult.style.display = "none";
+    sectionUserInfo.style.display = "block";
+  };
 </script>
 
 </body>

@@ -11,12 +11,16 @@
       font-family: "微软雅黑", sans-serif;
       background: #ffffff; 
       padding: 20px;
-      color: #222;
+      color: black;
       transition: background-color 0.3s ease, color 0.3s ease;
     }
-    h2, h3 { text-align: center; }
+    h2, h3 { 
+      text-align: center; 
+      color: black; 
+    }
     label, select, input[type=number] {
       width: 100%; margin: 10px 0 15px; font-size: 16px;
+      color: black;
     }
     select, input[type=number] {
       padding: 8px; border-radius: 6px; border: 1px solid #ccc;
@@ -34,6 +38,7 @@
     .option {
       background: white; border: 1px solid #bbb; border-radius: 6px;
       padding: 10px; margin: 6px 0; cursor: pointer; user-select:none;
+      color: black;
     }
     .option.selected {
       background: #4f46e5; color: white; border-color: #4338ca;
@@ -42,10 +47,12 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       background: #eee; padding: 10px; border-radius: 6px; font-family: monospace;
       user-select: all; /* 方便复制 */
+      color: black;
     }
     #totalScoreText {
       text-align: center; font-weight: bold; margin: 10px 0;
       font-size: 18px;
+      color: black;
     }
     canvas {
       display: block;
@@ -53,7 +60,7 @@
       max-width: 100%;
     }
     #progressText {
-      font-size: 14px; color: #555; text-align: center; margin-top: 5px;
+      font-size: 14px; color: black; text-align: center; margin-top: 5px;
     }
   </style>
 </head>
@@ -73,7 +80,7 @@
 </div>
 
 <div id="sectionQuiz" style="display:none;">
-  <div id="questionText" class="question" style="font-weight:700; margin-bottom:10px;"></div>
+  <div id="questionText" class="question" style="font-weight:700; margin-bottom:10px; color: black;"></div>
   <div id="optionsContainer"></div>
   <button id="btnPrev" disabled>上一题</button>
   <button id="btnNext" disabled>下一题</button>
@@ -118,7 +125,60 @@
       { text: "比较喜欢", tags: { novelty_seek: 1 } },
       { text: "非常喜欢", tags: { novelty_seek: 2 } }
     ]},
-    // ... 添加更多问题
+    { id: "Q4", text: "你通常是否按时完成任务？", options: [
+      { text: "经常拖延", tags: { responsibility: -2 } },
+      { text: "偶尔拖延", tags: { responsibility: -1 } },
+      { text: "大部分时间按时", tags: { responsibility: 1 } },
+      { text: "总是按时完成", tags: { responsibility: 2 } }
+    ]},
+    { id: "Q5", text: "你做决定时是否容易冲动？", options: [
+      { text: "完全不会冲动", tags: { self_control: 2 } },
+      { text: "不太冲动", tags: { self_control: 1 } },
+      { text: "有时冲动", tags: { self_control: -1 } },
+      { text: "非常冲动", tags: { self_control: -2 } }
+    ]},
+    { id: "Q6", text: "你是否喜欢探索未知？", options: [
+      { text: "完全不喜欢", tags: { novelty_seek: -2 } },
+      { text: "不太喜欢", tags: { novelty_seek: -1 } },
+      { text: "比较喜欢", tags: { novelty_seek: 1 } },
+      { text: "非常喜欢", tags: { novelty_seek: 2 } }
+    ]},
+    { id: "Q7", text: "你是否喜欢有条理地生活和工作？", options: [
+      { text: "不喜欢", tags: { responsibility: -2, openness: -1 } },
+      { text: "偶尔", tags: { responsibility: -1, openness: 0 } },
+      { text: "经常", tags: { responsibility: 1, openness: 1 } },
+      { text: "总是", tags: { responsibility: 2, openness: 2 } }
+    ]},
+    { id: "Q8", text: "你控制情绪的能力如何？", options: [
+      { text: "很差", tags: { emotion_stability: -2, self_control: -2 } },
+      { text: "一般", tags: { emotion_stability: -1, self_control: -1 } },
+      { text: "较好", tags: { emotion_stability: 1, self_control: 1 } },
+      { text: "非常好", tags: { emotion_stability: 2, self_control: 2 } }
+    ]},
+    { id: "Q9", text: "你喜欢艺术和创造性活动吗？", options: [
+      { text: "完全不喜欢", tags: { openness: -2 } },
+      { text: "不太喜欢", tags: { openness: -1 } },
+      { text: "比较喜欢", tags: { openness: 1 } },
+      { text: "非常喜欢", tags: { openness: 2 } }
+    ]},
+    { id: "Q10", text: "你觉得自己是一个外向的人吗？", options: [
+      { text: "非常内向", tags: { extraversion: -2 } },
+      { text: "有点内向", tags: { extraversion: -1 } },
+      { text: "有点外向", tags: { extraversion: 1 } },
+      { text: "非常外向", tags: { extraversion: 2 } }
+    ]},
+    { id: "Q11", text: "你是否喜欢计划并遵守计划？", options: [
+      { text: "完全不喜欢", tags: { responsibility: -2 } },
+      { text: "不太喜欢", tags: { responsibility: -1 } },
+      { text: "比较喜欢", tags: { responsibility: 1 } },
+      { text: "非常喜欢", tags: { responsibility: 2 } }
+    ]},
+    { id: "Q12", text: "你是否愿意接受新观点和改变？", options: [
+      { text: "完全不愿意", tags: { openness: -2 } },
+      { text: "不太愿意", tags: { openness: -1 } },
+      { text: "比较愿意", tags: { openness: 1 } },
+      { text: "非常愿意", tags: { openness: 2 } }
+    ]}
   ];
 
   let tagScores = {};
@@ -129,6 +189,7 @@
   const maxQuestions = 12;
   let age = 25;
   let gender = "male";
+
   const sectionUserInfo = document.getElementById("sectionUserInfo");
   const sectionQuiz = document.getElementById("sectionQuiz");
   const sectionResult = document.getElementById("sectionResult");
@@ -160,10 +221,7 @@
     optionsEl.innerHTML = "";
     selectedOptionIndex = null;
     btnNext.disabled = true;
-    btnPrev.disabled = questionCount <= 0;
-
-    // 更新页面颜色
-    updatePageColor();
+    btnPrev.disabled = questionCount === 0;
 
     for (let i = 0; i < q.options.length; i++) {
       const opt = document.createElement("div");
@@ -175,43 +233,11 @@
     progressText.textContent = `第 ${questionCount + 1} / ${maxQuestions} 题`;
   }
 
-  function updatePageColor() {
-    const score = tagScores.extraversion || 0;  // 基于外向性评分来调整颜色
-    const intensity = Math.min(Math.abs(score) * 30, 255);
-    document.body.style.backgroundColor = `rgb(${255 - intensity}, ${255 - intensity}, ${255})`;
-    document.body.style.color = score < 0 ? '#333' : '#fff';
-  }
-
-  function showResult() {
-    sectionQuiz.style.display = "none";
-    sectionResult.style.display = "block";
-
-    // 计算归一化分数0~100，保留一位小数
-    const normalizedScores = geneDimensions.map(dim => {
-      const raw = tagScores[dim.key] || 0;
-      let norm = (raw + 8) / 16 * 100; // 0~100
-      norm = Math.min(100, Math.max(0, norm));
-      return +norm.toFixed(1);
-    });
-
-    // 总分 = 六维度平均，0~100，1位小数
-    const totalScoreRaw = normalizedScores.reduce((a, b) => a + b, 0) / normalizedScores.length;
-    const totalScore = totalScoreRaw.toFixed(1);
-    totalScoreText.textContent = `总分: ${totalScore}`;
-
-    // 画雷达图
-    drawRadarChart(tagScores, age, gender);
-
-    let prompt = `Age: ${age}, Gender: ${gender === "male" ? "Male" : "Female"}\n`;
-    geneDimensions.forEach((dim, idx) => {
-      prompt += `${dim.label}: ${normalizedScores[idx]} / 100\n`;
-    });
-
-    promptOutput.textContent = prompt.trim();
-  }
-
-  function drawRadarChart(scores, age, gender) {
-    // 画雷达图的代码
+  function selectNextQuestion() {
+    for (let q of questionPool) {
+      if (!askedIds.has(q.id)) return q;
+    }
+    return null;
   }
 
   btnNext.onclick = () => {
@@ -222,11 +248,10 @@
     }
     askedIds.add(currentQuestion.id);
     questionCount++;
-    const nextQ = questionPool[questionCount] || null;
-    if (!nextQ) {
+    if (questionCount >= maxQuestions) {
       showResult();
     } else {
-      renderQuestion(nextQ);
+      renderQuestion(selectNextQuestion());
     }
   };
 
@@ -250,7 +275,7 @@
     sectionUserInfo.style.display = "none";
     sectionResult.style.display = "none";
     sectionQuiz.style.display = "block";
-    renderQuestion(questionPool[questionCount]);
+    renderQuestion(selectNextQuestion());
   };
 
   btnRestart.onclick = () => {
@@ -261,7 +286,92 @@
     sectionQuiz.style.display = "none";
     sectionUserInfo.style.display = "block";
   };
-</script>
 
-</body>
-</html>
+  function showResult() {
+    sectionQuiz.style.display = "none";
+    sectionResult.style.display = "block";
+
+    const normalizedScores = geneDimensions.map(dim => {
+      const raw = tagScores[dim.key] || 0;
+      let norm = (raw + 8) / 16 * 100;
+      norm = Math.min(100, Math.max(0, norm));
+      return +norm.toFixed(1);
+    });
+
+    const totalScoreRaw = normalizedScores.reduce((a, b) => a + b, 0) / normalizedScores.length;
+    const totalScore = totalScoreRaw.toFixed(1);
+    totalScoreText.textContent = `总分: ${totalScore}`;
+
+    drawRadarChart(tagScores, age, gender);
+
+    let prompt = `Age: ${age}, Gender: ${gender === "male" ? "Male" : "Female"}\n`;
+    geneDimensions.forEach((dim, idx) => {
+      prompt += `${dim.label}: ${normalizedScores[idx]} / 100\n`;
+    });
+
+    promptOutput.textContent = prompt.trim();
+  }
+
+  function drawRadarChart(scores, age, gender) {
+    const w = radarCanvas.width;
+    const h = radarCanvas.height;
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const radius = Math.min(cx, cy) * 0.75;
+    const dimCount = geneDimensions.length;
+    const angleStep = (2 * Math.PI) / dimCount;
+
+    let baseColor;
+    if (gender === "male") baseColor = [60, 120, 240];  // 蓝色
+    else baseColor = [240, 80, 80];  // 红色
+    const ageFactor = Math.min(age / 100, 1);
+
+    function blendColor(c, factor) {
+      return c.map(ch => Math.round(ch + factor * (255 - ch)));
+    }
+    const fillColorRGB = blendColor(baseColor, ageFactor);
+    const strokeColorRGB = blendColor(baseColor, ageFactor * 0.5);
+
+    const fillColor = `rgba(${fillColorRGB.join(",")},0.4)`;
+    const strokeColor = `rgba(${strokeColorRGB.join(",")},0.8)`;
+    const axisColor = "rgba(0,0,0,0.2)";
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = axisColor;
+    ctx.fillStyle = "transparent";
+    for (let level = 1; level <= 5; level++) {
+      ctx.beginPath();
+      for (let i = 0; i < dimCount; i++) {
+        const r = (radius * level) / 5;
+        const x = cx + r * Math.sin(i * angleStep);
+        const y = cy - r * Math.cos(i * angleStep);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = "#222";
+    ctx.font = "14px 微软雅黑";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (let i = 0; i < dimCount; i++) {
+      const x = cx + radius * Math.sin(i * angleStep);
+      const y = cy - radius * Math.cos(i * angleStep);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+
+      const label = geneDimensions[i].label;
+      const labelX = cx + (radius + 25) * Math.sin(i * angleStep);
+      const labelY = cy - (radius + 25) * Math.cos(i * angleStep);
+      ctx.fillText(label, labelX, labelY);
+    }
+
+    const normalizedScores = geneDimensions.map(dim => {
+      const raw = scores[dim.key] || 0;
+      let norm = (raw + 8) / 16; // 0~1
+      norm = Math.min(1, Math.max(0

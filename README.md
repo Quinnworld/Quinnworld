@@ -9,7 +9,7 @@
       max-width: 600px;
       margin: 20px auto;
       font-family: "微软雅黑", sans-serif;
-      background: #ffffff; /* 默认背景为白色 */
+      background: #ffffff; 
       padding: 20px;
       color: #222;
       transition: background-color 0.3s ease, color 0.3s ease;
@@ -112,7 +112,13 @@
       { text: "情绪稳定", tags: { emotion_stability: 1, self_control: 1 } },
       { text: "非常冷静", tags: { emotion_stability: 2, self_control: 2 } }
     ]},
-    // ... 其他问题
+    { id: "Q3", text: "你喜欢尝试新鲜事物吗？", options: [
+      { text: "完全不喜欢", tags: { novelty_seek: -2 } },
+      { text: "不太喜欢", tags: { novelty_seek: -1 } },
+      { text: "比较喜欢", tags: { novelty_seek: 1 } },
+      { text: "非常喜欢", tags: { novelty_seek: 2 } }
+    ]},
+    // ... 添加更多问题
   ];
 
   let tagScores = {};
@@ -156,7 +162,7 @@
     btnNext.disabled = true;
     btnPrev.disabled = questionCount <= 0;
 
-    // 页面颜色变化逻辑
+    // 更新页面颜色
     updatePageColor();
 
     for (let i = 0; i < q.options.length; i++) {
@@ -169,73 +175,9 @@
     progressText.textContent = `第 ${questionCount + 1} / ${maxQuestions} 题`;
   }
 
-  function selectNextQuestion() {
-    for (let q of questionPool) {
-      if (!askedIds.has(q.id)) return q;
-    }
-    return null;
-  }
-
-  function selectPrevQuestion() {
-    for (let q of questionPool) {
-      if (askedIds.has(q.id)) return q;
-    }
-    return null;
-  }
-
-  btnNext.onclick = () => {
-    if (selectedOptionIndex === null) return;
-    const selTags = currentQuestion.options[selectedOptionIndex].tags;
-    for (let t in selTags) {
-      tagScores[t] = (tagScores[t] || 0) + selTags[t];
-    }
-    askedIds.add(currentQuestion.id);
-    questionCount++;
-    const nextQ = selectNextQuestion();
-    if (!nextQ) {
-      showResult();
-    } else {
-      renderQuestion(nextQ);
-    }
-  };
-
-  btnPrev.onclick = () => {
-    questionCount--;
-    const prevQ = selectPrevQuestion();
-    if (!prevQ) return;
-    renderQuestion(prevQ);
-  };
-
-  btnStart.onclick = () => {
-    age = parseInt(inputAge.value);
-    if (isNaN(age) || age < 0) {
-      alert("请输入有效年龄（非负整数）");
-      return;
-    }
-    gender = selectGender.value;
-    tagScores = {};
-    askedIds.clear();
-    questionCount = 0;
-    sectionUserInfo.style.display = "none";
-    sectionResult.style.display = "none";
-    sectionQuiz.style.display = "block";
-    const firstQ = selectNextQuestion();
-    renderQuestion(firstQ);
-  };
-
-  btnRestart.onclick = () => {
-    tagScores = {};
-    askedIds.clear();
-    questionCount = 0;
-    sectionResult.style.display = "none";
-    sectionQuiz.style.display = "none";
-    sectionUserInfo.style.display = "block";
-  };
-
-  // 更新页面背景色（颜色根据基因评分变化）
   function updatePageColor() {
-    const score = tagScores.extraversion || 0;  // 以外向性为例
-    const intensity = Math.min(Math.abs(score) * 30, 255); // 根据得分计算强度
+    const score = tagScores.extraversion || 0;  // 基于外向性评分来调整颜色
+    const intensity = Math.min(Math.abs(score) * 30, 255);
     document.body.style.backgroundColor = `rgb(${255 - intensity}, ${255 - intensity}, ${255})`;
     document.body.style.color = score < 0 ? '#333' : '#fff';
   }
@@ -268,15 +210,56 @@
     promptOutput.textContent = prompt.trim();
   }
 
-  // 绘制雷达图
   function drawRadarChart(scores, age, gender) {
-    // ... 绘制雷达图的代码
+    // 画雷达图的代码
   }
 
-  promptOutput.onclick = () => {
-    navigator.clipboard.writeText(promptOutput.textContent).then(() => {
-      alert("已复制Prompt文本");
-    });
+  btnNext.onclick = () => {
+    if (selectedOptionIndex === null) return;
+    const selTags = currentQuestion.options[selectedOptionIndex].tags;
+    for (let t in selTags) {
+      tagScores[t] = (tagScores[t] || 0) + selTags[t];
+    }
+    askedIds.add(currentQuestion.id);
+    questionCount++;
+    const nextQ = questionPool[questionCount] || null;
+    if (!nextQ) {
+      showResult();
+    } else {
+      renderQuestion(nextQ);
+    }
+  };
+
+  btnPrev.onclick = () => {
+    questionCount--;
+    const prevQ = questionPool[questionCount];
+    if (!prevQ) return;
+    renderQuestion(prevQ);
+  };
+
+  btnStart.onclick = () => {
+    age = parseInt(inputAge.value);
+    if (isNaN(age) || age < 0) {
+      alert("请输入有效年龄（非负整数）");
+      return;
+    }
+    gender = selectGender.value;
+    tagScores = {};
+    askedIds.clear();
+    questionCount = 0;
+    sectionUserInfo.style.display = "none";
+    sectionResult.style.display = "none";
+    sectionQuiz.style.display = "block";
+    renderQuestion(questionPool[questionCount]);
+  };
+
+  btnRestart.onclick = () => {
+    tagScores = {};
+    askedIds.clear();
+    questionCount = 0;
+    sectionResult.style.display = "none";
+    sectionQuiz.style.display = "none";
+    sectionUserInfo.style.display = "block";
   };
 </script>
 

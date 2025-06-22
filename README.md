@@ -41,10 +41,6 @@
   <h2>深度解析报告</h2>
   <div id="depth-report-content" style="display:none;">
     <ul id="detail-list"></ul>
-    <h3>您的动物象征：</h3>
-    <p id="animal-symbol"></p>
-    <h3>发展建议：</h3>
-    <p id="development-suggestion"></p>
   </div>
   <button id="payment-btn" class="payment-btn">解锁深度发展报告（￥10）</button>
   <p id="payment-status" style="text-align:center; margin-top:10px;"></p>
@@ -118,34 +114,6 @@ const questions = [
     { text: "完全没有计划，甚至感到迷茫", scores: { AttentionControl: 2, EmotionalStability: 3 } }
   ] }
 ];
-
-// 动物匹配逻辑
-const animalProfiles = {
-  lion: {
-    name: "狮子",
-    suggestion: "作为狮子，您具备领导力与高度的社交能力，但可能在压力面前容易感到焦虑。建议您通过冥想、运动来增强情绪稳定性。"
-  },
-  owl: {
-    name: "猫头鹰",
-    suggestion: "猫头鹰代表智慧与深思熟虑，您擅长规划和决策，但有时可能过于内向。可以尝试更多的社交互动来提升自己的人际关系。"
-  },
-  dolphin: {
-    name: "海豚",
-    suggestion: "海豚象征着高社交性和情绪调节能力。您与他人的互动十分自然，但在应对压力时可能有些脆弱。加强抗压训练将有助于您实现更好的自我。"
-  },
-  turtle: {
-    name: "乌龟",
-    suggestion: "乌龟象征着稳重与耐性，您在面临复杂任务时展现出谨慎的态度，但有时可能过于保守。建议您提高自己的风险容忍度，适当挑战自己。"
-  }
-};
-
-// 随机分配动物
-function assignAnimal(totalScore) {
-  if (totalScore > 70) return animalProfiles.lion;
-  if (totalScore > 50) return animalProfiles.dolphin;
-  if (totalScore > 30) return animalProfiles.owl;
-  return animalProfiles.turtle;
-}
 
 // 随机打乱数组
 function shuffleArray(arr) {
@@ -256,11 +224,6 @@ function displayResults() {
     return `<li><strong>${dimensionLabels[key]}</strong>: ${totalScores[key]}</li>`;
   }).join('');
   document.getElementById('detail-list').innerHTML = detailsList;
-
-  // 动物匹配
-  const animal = assignAnimal(totalScore);
-  document.getElementById('animal-symbol').textContent = `您的动物象征是：${animal.name}`;
-  document.getElementById('development-suggestion').textContent = animal.suggestion;
 
   // 解锁深度发展报告
   if (totalScore > 60) {

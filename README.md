@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>心理测评系统示范</title>
+<title>因•12题解析你的内心</title>
 <style>
   body {
     max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif;
@@ -53,6 +53,9 @@
   #progressText {
     font-size: 14px; color: #555; text-align: center; margin-top: 5px;
   }
+  #radarChart {
+    width: 400px; height: 400px; margin: 20px auto;
+  }
 </style>
 </head>
 <body>
@@ -81,12 +84,16 @@
 
 <div id="sectionResult" style="display:none;">
   <div id="totalScoreText"></div>
+  <div id="radarChart"></div>
   <h3>基础解析（免费）</h3>
   <pre id="basicAnalysis"></pre>
   <h3>深度解析（付费）</h3>
   <pre id="premiumAnalysis" title="点击生成深度解析">点击生成深度解析</pre>
   <button id="btnRestart">重新开始</button>
 </div>
+
+<!-- 引入 ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
 
 <script>
   const geneDimensions = [
@@ -192,8 +199,6 @@
   const premiumAnalysisEl = document.getElementById("premiumAnalysis");
   const btnStart = document.getElementById("btnStart");
   const btnRestart = document.getElementById("btnRestart");
-  const inputAge = document.getElementById("inputAge");
-  const selectGender = document.getElementById("selectGender");
   const totalScoreText = document.getElementById("totalScoreText");
 
   function updateBackgroundColor() {
@@ -243,59 +248,74 @@
     return (norm * 100).toFixed(1);
   }
 
-  function generateBasicAnalysis(scores) {
-    const parts = [];
+  // 生成基础解析和发展建议
+  function generateBasicAnalysisWithAdvice(scores) {
+    const advices = [];
     const { extraversion=0, emotion_stability=0, novelty_seek=0, responsibility=0, self_control=0, openness=0 } = scores;
 
-    if (extraversion >= 4) parts.push("你性格外向，善于交流，喜欢社交。");
-    else if (extraversion <= -4) parts.push("你较为内向，喜欢独处。");
-    else parts.push("你的外向性适中，灵活适应社交环境。");
+    if (extraversion >= 6) advices.push("外向性较强，建议多参与领导和社交活动，发挥优势。");
+    else if (extraversion <= -6) advices.push("外向性较低，建议适当尝试小范围社交，逐步提升沟通能力。");
+    else advices.push("外向性适中，保持灵活社交，平衡内外向特点。");
 
-    if (emotion_stability >= 4) parts.push("情绪稳定，能有效应对压力。");
-    else if (emotion_stability <= -4) parts.push("情绪波动较大，建议学习情绪调节。");
-    else parts.push("情绪较为平稳，能较好管理压力。");
+    if (emotion_stability >= 6) advices.push("情绪稳定，适合承担压力较大的工作，注意保持心理健康。");
+    else if (emotion_stability <= -6) advices.push("情绪波动较大，建议学习情绪管理和压力缓解技巧。");
+    else advices.push("情绪较为平稳，继续保持良好情绪调节习惯。");
 
-    if (novelty_seek >= 4) parts.push("喜欢探索新事物，富有好奇心。");
-    else if (novelty_seek <= -4) parts.push("偏好稳定环境，较少寻求新体验。");
-    else parts.push("对新事物持开放态度。");
+    if (novelty_seek >= 6) advices.push("喜欢新奇和变化，适合创新型岗位，注意冲动控制。");
+    else if (novelty_seek <= -6) advices.push("偏好稳定，适合结构化环境，尝试适度接受新事物。");
+    else advices.push("新奇寻求适中，能较好适应环境变化。");
 
-    if (responsibility >= 4) parts.push("责任感强，做事有条理。");
-    else if (responsibility <= -4) parts.push("有时拖延，建议加强时间管理。");
-    else parts.push("责任感适中，能平衡自由与约束。");
+    if (responsibility >= 6) advices.push("责任感强，适合管理和执行岗位，保持高效工作习惯。");
+    else if (responsibility <= -6) advices.push("责任感稍弱，建议培养计划性和时间管理能力。");
+    else advices.push("责任感适中，能较好完成任务。");
 
-    if (self_control >= 4) parts.push("自控力强，善于控制冲动。");
-    else if (self_control <= -4) parts.push("较易冲动，建议培养耐心。");
-    else parts.push("自控力适中，较理智。");
+    if (self_control >= 6) advices.push("自控力强，有利于长期目标坚持和情绪管理。");
+    else if (self_control <= -6) advices.push("自控力较弱，建议练习冲动控制和情绪调节技巧。");
+    else advices.push("自控力适中，保持良好习惯。");
 
-    if (openness >= 4) parts.push("思想开放，乐于接受新观点。");
-    else if (openness <= -4) parts.push("较为保守，喜欢传统。");
-    else parts.push("开放性适中，兼顾传统与创新。");
+    if (openness >= 6) advices.push("开放性高，适合学习和创新，建议多参与跨领域交流。");
+    else if (openness <= -6) advices.push("开放性较低，适合稳定环境，尝试拓展视野。");
+    else advices.push("开放性适中，兼具创新与稳定。");
 
-    return parts.join("\n");
+    return advices.join("\n");
   }
 
-  async function requestPremiumAnalysis() {
-    premiumAnalysisEl.textContent = "生成中，请稍候...";
-    try {
-      const resp = await fetch('/api/generateAnalysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scores: tagScores, age, gender })
-      });
-      const data = await resp.json();
-      premiumAnalysisEl.textContent = data.analysisText;
-    } catch {
-      premiumAnalysisEl.textContent = "生成失败，请稍后重试。";
-    }
-  }
+  // 绘制雷达图
+  function drawRadarChart(scores) {
+    const chartDom = document.getElementById('radarChart');
+    const myChart = echarts.init(chartDom);
 
-  premiumAnalysisEl.onclick = () => {
-    if (!userHasPaid) {
-      alert("请先购买深度解析服务。");
-      return;
-    }
-    requestPremiumAnalysis();
-  };
+    const indicators = geneDimensions.map(dim => ({ name: dim.label, max: 48 }));
+
+    const dataValues = geneDimensions.map(dim => {
+      let val = scores[dim.key] || 0;
+      return val + 24; // 转换到0~48区间
+    });
+
+    const option = {
+      tooltip: {},
+      radar: {
+        indicator: indicators,
+        shape: 'circle',
+        splitNumber: 6,
+        axisName: { color: '#000', fontSize: 14 }
+      },
+      series: [{
+        name: '性格因子得分',
+        type: 'radar',
+        data: [{
+          value: dataValues,
+          name: '得分',
+          areaStyle: { color: 'rgba(79, 70, 229, 0.4)' },
+          lineStyle: { color: '#4f46e5' },
+          symbolSize: 8,
+          itemStyle: { color: '#4f46e5' }
+        }]
+      }]
+    };
+
+    myChart.setOption(option);
+  }
 
   btnStart.onclick = () => {
     age = parseInt(inputAge.value);
@@ -317,7 +337,7 @@
     sectionUserInfo.style.display = "block";
     sectionQuiz.style.display = "none";
     sectionResult.style.display = "none";
-    userHasPaid = false; // 重置付费状态，实际可根据登录状态
+    userHasPaid = false; // 重置付费状态
   };
 
   btnNext.onclick = () => {
@@ -345,9 +365,25 @@
     totalScoreText.textContent = `综合因子得分：${total}分`;
     totalScoreText.style.color = `rgb(${240 - 180 * total / 100},${80 + 40 * total / 100},${80 + 160 * total / 100})`;
 
-    basicAnalysisEl.textContent = generateBasicAnalysis(tagScores);
+    drawRadarChart(tagScores);
+
+    basicAnalysisEl.textContent = generateBasicAnalysisWithAdvice(tagScores);
+
     premiumAnalysisEl.textContent = "点击生成深度解析";
   }
+
+  premiumAnalysisEl.onclick = () => {
+    if (!userHasPaid) {
+      alert("请先购买深度解析服务");
+      return;
+    }
+    // 这里调用后端AI接口生成深度解析（示范）
+    premiumAnalysisEl.textContent = "深度解析生成中，请稍候...";
+    // 伪代码示范，需替换为实际接口调用
+    setTimeout(() => {
+      premiumAnalysisEl.textContent = "这是基于AI生成的深度个性解析报告，内容更丰富、更专业。";
+    }, 1500);
+  };
 
   function renderQuestion(index) {
     currentIndex = index;

@@ -126,13 +126,102 @@
         { text: "非常冷静", tags: { emotion_stability: 2, self_control: 2 } }
       ]
     },
-    // 添加剩余的题目
+    {
+      id: "Q3", text: "你喜欢尝试新鲜事物吗？",
+      options: [
+        { text: "完全不喜欢", tags: { novelty_seek: -2, openness: -1 } },
+        { text: "不太喜欢", tags: { novelty_seek: -1, openness: 0 } },
+        { text: "比较喜欢", tags: { novelty_seek: 1, openness: 1 } },
+        { text: "非常喜欢", tags: { novelty_seek: 2, openness: 2 } }
+      ]
+    },
+    {
+      id: "Q4", text: "你通常是否按时完成任务？",
+      options: [
+        { text: "经常拖延", tags: { responsibility: -2 } },
+        { text: "偶尔拖延", tags: { responsibility: -1 } },
+        { text: "大部分时间按时", tags: { responsibility: 1 } },
+        { text: "总是按时完成", tags: { responsibility: 2 } }
+      ]
+    },
+    {
+      id: "Q5", text: "你做决定时是否容易冲动？",
+      options: [
+        { text: "完全不会冲动", tags: { self_control: 2 } },
+        { text: "不太冲动", tags: { self_control: 1 } },
+        { text: "有时冲动", tags: { self_control: -1 } },
+        { text: "非常冲动", tags: { self_control: -2 } }
+      ]
+    },
+    {
+      id: "Q6", text: "你是否喜欢探索未知？",
+      options: [
+        { text: "完全不喜欢", tags: { novelty_seek: -2 } },
+        { text: "不太喜欢", tags: { novelty_seek: -1 } },
+        { text: "比较喜欢", tags: { novelty_seek: 1 } },
+        { text: "非常喜欢", tags: { novelty_seek: 2 } }
+      ]
+    },
+    {
+      id: "Q7", text: "你是否喜欢有条理地生活和工作？",
+      options: [
+        { text: "不喜欢", tags: { responsibility: -2, openness: -1 } },
+        { text: "偶尔", tags: { responsibility: -1, openness: 0 } },
+        { text: "经常", tags: { responsibility: 1, openness: 1 } },
+        { text: "总是", tags: { responsibility: 2, openness: 2 } }
+      ]
+    },
+    {
+      id: "Q8", text: "你控制情绪的能力如何？",
+      options: [
+        { text: "很差", tags: { emotion_stability: -2, self_control: -2 } },
+        { text: "一般", tags: { emotion_stability: -1, self_control: -1 } },
+        { text: "较好", tags: { emotion_stability: 1, self_control: 1 } },
+        { text: "非常好", tags: { emotion_stability: 2, self_control: 2 } }
+      ]
+    },
+    {
+      id: "Q9", text: "你喜欢挑战和冒险吗？",
+      options: [
+        { text: "完全不喜欢", tags: { novelty_seek: -2 } },
+        { text: "不太喜欢", tags: { novelty_seek: -1 } },
+        { text: "有点喜欢", tags: { novelty_seek: 1 } },
+        { text: "非常喜欢", tags: { novelty_seek: 2 } }
+      ]
+    },
+    {
+      id: "Q10", text: "你是否有强烈的好奇心？",
+      options: [
+        { text: "没有", tags: { openness: -2 } },
+        { text: "不太好奇", tags: { openness: -1 } },
+        { text: "有点好奇", tags: { openness: 1 } },
+        { text: "非常好奇", tags: { openness: 2 } }
+      ]
+    },
+    {
+      id: "Q11", text: "你是否倾向于保持乐观态度？",
+      options: [
+        { text: "非常悲观", tags: { extraversion: -2 } },
+        { text: "比较悲观", tags: { extraversion: -1 } },
+        { text: "一般", tags: { extraversion: 1 } },
+        { text: "非常乐观", tags: { extraversion: 2 } }
+      ]
+    },
+    {
+      id: "Q12", text: "你是否喜欢有规律的生活？",
+      options: [
+        { text: "完全不喜欢", tags: { responsibility: -2 } },
+        { text: "偶尔喜欢", tags: { responsibility: -1 } },
+        { text: "比较喜欢", tags: { responsibility: 1 } },
+        { text: "非常喜欢", tags: { responsibility: 2 } }
+      ]
+    }
   ];
 
   let tagScores = {};
   let askedIds = new Set();
   let questionCount = 0;
-  const maxQuestions = 12;
+  const maxQuestions = questionPool.length;
   let age = 25;
   let gender = "male";
   let selectedOptionIndex = null;
@@ -190,10 +279,7 @@
   }
 
   function selectNextQuestion() {
-    for (let q of questionPool) {
-      if (!askedIds.has(q.id)) return q;
-    }
-    return null;
+    return questionPool[questionCount];
   }
 
   btnNext.onclick = () => {
@@ -208,19 +294,15 @@
       showResult();
     } else {
       const nextQ = selectNextQuestion();
-      if (!nextQ) {
-        showResult();
-      } else {
-        renderQuestion(nextQ);
-      }
+      renderQuestion(nextQ);
     }
   };
 
   btnPrev.onclick = () => {
     if (questionCount > 0) {
       questionCount--;
-      const prevQ = questionPool.find(q => !askedIds.has(q.id));
-      if (prevQ) renderQuestion(prevQ);
+      const prevQ = selectNextQuestion();
+      renderQuestion(prevQ);
     }
   };
 

@@ -20,10 +20,10 @@ const questions = [
     options: ["外向", "内向", "随机", "随和"],
     geneMapping: [0, 1, 2, 3]
   },
-  // 这里简化问题，可以继续添加更多问题...
+  // 可以继续添加更多问题
 ];
 
-// 用户答案存储
+// 存储用户答案
 let userAnswers = new Array(questions.length);
 
 // 生成问卷
@@ -87,7 +87,7 @@ function generateReport(answers) {
   return report;
 }
 
-// 计算得分（可以根据基因型映射和答案计算得分）
+// 计算得分（根据用户的答案计算各项分数）
 function calculateScores(answers) {
   let scores = {
     intelligence: 0,
@@ -98,7 +98,7 @@ function calculateScores(answers) {
 
   answers.forEach((answerIndex, questionIndex) => {
     const mapping = questions[questionIndex].geneMapping[answerIndex];
-    // 假设每个答案都给一个固定分数，或者可以根据实际需要进一步修改
+    // 根据答案更新分数
     if (mapping === 0) scores.intelligence++;
     if (mapping === 1) scores.creativity++;
     if (mapping === 2) scores.emotion++;
@@ -110,7 +110,6 @@ function calculateScores(answers) {
 
 // 生成书籍推荐
 function generateBookRecommendations(answers) {
-  // 示例书籍推荐（这里可以扩展为更多书籍）
   const bookLibrary = [
     { title: "批判性思维", author: "理查德·保罗", genre: "思维训练", category: "智力" },
     { title: "情绪的智慧", author: "丹尼尔·戈尔曼", genre: "情绪管理", category: "情绪" },
@@ -120,7 +119,6 @@ function generateBookRecommendations(answers) {
 
   let recommendations = [];
 
-  // 基于分数生成推荐
   const scores = calculateScores(answers);
   if (scores.intelligence > 1) recommendations.push(bookLibrary[0]);
   if (scores.emotion > 1) recommendations.push(bookLibrary[1]);

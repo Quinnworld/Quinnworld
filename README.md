@@ -56,19 +56,41 @@ const questions = [
   { q: "当你面对挫折时，你通常会？", options: [
     { text: "快速调整情绪，积极应对", scores: { EmotionalStability: 8, StressResilience: 7 } },
     { text: "感到沮丧，但可以逐渐恢复", scores: { EmotionalStability: 4, StressResilience: 5 } },
-    { text: "长时间无法振作，情绪容易波动", scores: { EmotionalStability: 2, StressResilience: 3 } }
+    { text: "长时间无法振作，情绪容易波动", scores: { EmotionalStability: 2, StressResilience: 3 } },
+    { text: "寻求他人帮助，暂时逃避", scores: { Sociability: 6, EmotionalStability: 3 } }
   ] },
   { q: "在做决定时，你通常？", options: [
     { text: "仔细思考后做决定", scores: { Impulsivity: 3, AttentionControl: 7 } },
-    { text: "快速做决定，倾向于立即行动", scores: { Impulsivity: 8, AttentionControl: 4 } }
+    { text: "快速做决定，倾向于立即行动", scores: { Impulsivity: 8, AttentionControl: 4 } },
+    { text: "依赖他人的建议和意见", scores: { Sociability: 6, EmotionalStability: 5 } },
+    { text: "反复琢磨，迟迟无法决定", scores: { EmotionalStability: 4, Impulsivity: 2 } }
   ] },
   { q: "你喜欢与陌生人交流吗？", options: [
     { text: "非常喜欢，感到很有趣", scores: { Sociability: 9 } },
     { text: "偶尔，取决于情境", scores: { Sociability: 5 } },
-    { text: "不太喜欢，感到不自在", scores: { Sociability: 2 } }
+    { text: "不太喜欢，感到不自在", scores: { Sociability: 2 } },
+    { text: "我倾向于避免交流", scores: { Sociability: 1 } }
+  ] },
+  { q: "你通常如何应对压力？", options: [
+    { text: "通过锻炼或运动释放压力", scores: { StressResilience: 8, EmotionalStability: 6 } },
+    { text: "倾诉给朋友或家人", scores: { Sociability: 7, StressResilience: 5 } },
+    { text: "沉默不语，独自承担", scores: { EmotionalStability: 5, StressResilience: 4 } },
+    { text: "逃避，避免面对压力源", scores: { StressResilience: 2, EmotionalStability: 3 } }
   ] },
   // 继续添加更多问题...
 ];
+
+// 随机打乱数组
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+// 随机打乱问题和选项顺序
+shuffleArray(questions);
+questions.forEach(question => shuffleArray(question.options));
 
 let userAnswers = [];
 let currentQuestionIndex = 0;

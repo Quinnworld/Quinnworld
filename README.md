@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>因•趣问答完整版</title>
+<title>因•趣问答完整版（2025心理科学版）</title>
 <style>
   body {
     max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif;
@@ -39,12 +39,15 @@
   .option.selected {
     background: #4f46e5; color: white; border-color: #4338ca;
   }
-  #promptOutput {
+  #promptOutput, #basicAnalysis, #premiumAnalysis {
     white-space: pre-wrap; word-break: break-word;
     background: #eee; padding: 10px; border-radius: 6px;
     font-family: monospace;
     user-select: all; /* 方便复制 */
-    cursor: pointer;
+    cursor: default;
+  }
+  #premiumAnalysis {
+    background: #fff0f0; color: #888; cursor: pointer;
   }
   #totalScoreText {
     text-align: center; font-weight: bold; margin: 10px 0;
@@ -68,7 +71,7 @@
 </head>
 <body>
 
-<h2>趣问答 & 因得分完整版</h2>
+<h2>趣问答 & 因得分完整版（2025心理科学版）</h2>
 
 <div id="sectionUserInfo">
   <label for="inputAge">年龄（不限）</label>
@@ -96,8 +99,13 @@
   <h3>雷达图因子维度评分</h3>
   <canvas id="radarChart" width="400" height="400"></canvas>
   <div id="totalScoreText"></div>
-  <h3>因子风格 Prompt（点击可复制）</h3>
-  <pre id="promptOutput" title="点击复制"></pre>
+
+  <h3>初步版个性解析（免费）</h3>
+  <pre id="basicAnalysis"></pre>
+
+  <h3>深度版个性解析（付费解锁）</h3>
+  <pre id="premiumAnalysis" title="点击购买深度解析服务">点击购买深度解析服务</pre>
+
   <button id="btnRestart">重新开始</button>
 </div>
 
@@ -112,114 +120,78 @@
   ];
 
   const questionPool = [
-    {
-      id: "Q1", text: "你喜欢参加社交活动吗？",
-      options: [
-        { text: "非常不喜欢", tags: { extraversion: -2 } },
-        { text: "不太喜欢", tags: { extraversion: -1 } },
-        { text: "比较喜欢", tags: { extraversion: 1 } },
-        { text: "非常喜欢", tags: { extraversion: 2 } }
-      ]
-    },
-    {
-      id: "Q2", text: "面对压力时你的情绪表现？",
-      options: [
-        { text: "非常紧张和焦虑", tags: { emotion_stability: -2, self_control: -1 } },
-        { text: "有些不安", tags: { emotion_stability: -1, self_control: 0 } },
-        { text: "情绪稳定", tags: { emotion_stability: 1, self_control: 1 } },
-        { text: "非常冷静", tags: { emotion_stability: 2, self_control: 2 } }
-      ]
-    },
-    {
-      id: "Q3", text: "你喜欢尝试新鲜事物吗？",
-      options: [
-        { text: "完全不喜欢", tags: { novelty_seek: -2, openness: -1 } },
-        { text: "不太喜欢", tags: { novelty_seek: -1, openness: 0 } },
-        { text: "比较喜欢", tags: { novelty_seek: 1, openness: 1 } },
-        { text: "非常喜欢", tags: { novelty_seek: 2, openness: 2 } }
-      ]
-    },
-    {
-      id: "Q4", text: "你通常是否按时完成任务？",
-      options: [
-        { text: "经常拖延", tags: { responsibility: -2 } },
-        { text: "偶尔拖延", tags: { responsibility: -1 } },
-        { text: "大部分时间按时", tags: { responsibility: 1 } },
-        { text: "总是按时完成", tags: { responsibility: 2 } }
-      ]
-    },
-    {
-      id: "Q5", text: "你做决定时是否容易冲动？",
-      options: [
-        { text: "完全不会冲动", tags: { self_control: 2 } },
-        { text: "不太冲动", tags: { self_control: 1 } },
-        { text: "有时冲动", tags: { self_control: -1 } },
-        { text: "非常冲动", tags: { self_control: -2 } }
-      ]
-    },
-    {
-      id: "Q6", text: "你是否喜欢探索未知？",
-      options: [
-        { text: "完全不喜欢", tags: { novelty_seek: -2 } },
-        { text: "不太喜欢", tags: { novelty_seek: -1 } },
-        { text: "比较喜欢", tags: { novelty_seek: 1 } },
-        { text: "非常喜欢", tags: { novelty_seek: 2 } }
-      ]
-    },
-    {
-      id: "Q7", text: "你是否喜欢有条理地生活和工作？",
-      options: [
-        { text: "不喜欢", tags: { responsibility: -2, openness: -1 } },
-        { text: "偶尔", tags: { responsibility: -1, openness: 0 } },
-        { text: "经常", tags: { responsibility: 1, openness: 1 } },
-        { text: "总是", tags: { responsibility: 2, openness: 2 } }
-      ]
-    },
-    {
-      id: "Q8", text: "你控制情绪的能力如何？",
-      options: [
-        { text: "很差", tags: { emotion_stability: -2, self_control: -2 } },
-        { text: "一般", tags: { emotion_stability: -1, self_control: -1 } },
-        { text: "较好", tags: { emotion_stability: 1, self_control: 1 } },
-        { text: "非常好", tags: { emotion_stability: 2, self_control: 2 } }
-      ]
-    },
-    {
-      id: "Q9", text: "你是否愿意接受新观点和改变？",
-      options: [
-        { text: "完全不愿意", tags: { openness: -2 } },
-        { text: "不太愿意", tags: { openness: -1 } },
-        { text: "比较愿意", tags: { openness: 1 } },
-        { text: "非常愿意", tags: { openness: 2 } }
-      ]
-    },
-    {
-      id: "Q10", text: "你是否喜欢团队合作？",
-      options: [
-        { text: "完全不喜欢", tags: { extraversion: -2, responsibility: -1 } },
-        { text: "不太喜欢", tags: { extraversion: -1, responsibility: 0 } },
-        { text: "比较喜欢", tags: { extraversion: 1, responsibility: 1 } },
-        { text: "非常喜欢", tags: { extraversion: 2, responsibility: 2 } }
-      ]
-    },
-    {
-      id: "Q11", text: "你面对失败时的态度是？",
-      options: [
-        { text: "很沮丧，难以振作", tags: { emotion_stability: -2 } },
-        { text: "有些消极", tags: { emotion_stability: -1 } },
-        { text: "能较快调整", tags: { emotion_stability: 1 } },
-        { text: "积极乐观", tags: { emotion_stability: 2 } }
-      ]
-    },
-    {
-      id: "Q12", text: "你是否喜欢规划未来？",
-      options: [
-        { text: "完全不喜欢", tags: { responsibility: -2, self_control: -1 } },
-        { text: "不太喜欢", tags: { responsibility: -1, self_control: 0 } },
-        { text: "比较喜欢", tags: { responsibility: 1, self_control: 1 } },
-        { text: "非常喜欢", tags: { responsibility: 2, self_control: 2 } }
-      ]
-    }
+    { id: "Q1", text: "你喜欢参加社交活动吗？", options: [
+      { text: "非常不喜欢", tags: { extraversion: -2 } },
+      { text: "不太喜欢", tags: { extraversion: -1 } },
+      { text: "比较喜欢", tags: { extraversion: 1 } },
+      { text: "非常喜欢", tags: { extraversion: 2 } }
+    ]},
+    { id: "Q2", text: "面对压力时你的情绪表现？", options: [
+      { text: "非常紧张和焦虑", tags: { emotion_stability: -2, self_control: -1 } },
+      { text: "有些不安", tags: { emotion_stability: -1, self_control: 0 } },
+      { text: "情绪稳定", tags: { emotion_stability: 1, self_control: 1 } },
+      { text: "非常冷静", tags: { emotion_stability: 2, self_control: 2 } }
+    ]},
+    { id: "Q3", text: "你喜欢尝试新鲜事物吗？", options: [
+      { text: "完全不喜欢", tags: { novelty_seek: -2, openness: -1 } },
+      { text: "不太喜欢", tags: { novelty_seek: -1, openness: 0 } },
+      { text: "比较喜欢", tags: { novelty_seek: 1, openness: 1 } },
+      { text: "非常喜欢", tags: { novelty_seek: 2, openness: 2 } }
+    ]},
+    { id: "Q4", text: "你通常是否按时完成任务？", options: [
+      { text: "经常拖延", tags: { responsibility: -2 } },
+      { text: "偶尔拖延", tags: { responsibility: -1 } },
+      { text: "大部分时间按时", tags: { responsibility: 1 } },
+      { text: "总是按时完成", tags: { responsibility: 2 } }
+    ]},
+    { id: "Q5", text: "你做决定时是否容易冲动？", options: [
+      { text: "完全不会冲动", tags: { self_control: 2 } },
+      { text: "不太冲动", tags: { self_control: 1 } },
+      { text: "有时冲动", tags: { self_control: -1 } },
+      { text: "非常冲动", tags: { self_control: -2 } }
+    ]},
+    { id: "Q6", text: "你是否喜欢探索未知？", options: [
+      { text: "完全不喜欢", tags: { novelty_seek: -2 } },
+      { text: "不太喜欢", tags: { novelty_seek: -1 } },
+      { text: "比较喜欢", tags: { novelty_seek: 1 } },
+      { text: "非常喜欢", tags: { novelty_seek: 2 } }
+    ]},
+    { id: "Q7", text: "你是否喜欢有条理地生活和工作？", options: [
+      { text: "不喜欢", tags: { responsibility: -2, openness: -1 } },
+      { text: "偶尔", tags: { responsibility: -1, openness: 0 } },
+      { text: "经常", tags: { responsibility: 1, openness: 1 } },
+      { text: "总是", tags: { responsibility: 2, openness: 2 } }
+    ]},
+    { id: "Q8", text: "你控制情绪的能力如何？", options: [
+      { text: "很差", tags: { emotion_stability: -2, self_control: -2 } },
+      { text: "一般", tags: { emotion_stability: -1, self_control: -1 } },
+      { text: "较好", tags: { emotion_stability: 1, self_control: 1 } },
+      { text: "非常好", tags: { emotion_stability: 2, self_control: 2 } }
+    ]},
+    { id: "Q9", text: "你是否愿意接受新观点和改变？", options: [
+      { text: "完全不愿意", tags: { openness: -2 } },
+      { text: "不太愿意", tags: { openness: -1 } },
+      { text: "比较愿意", tags: { openness: 1 } },
+      { text: "非常愿意", tags: { openness: 2 } }
+    ]},
+    { id: "Q10", text: "你是否喜欢团队合作？", options: [
+      { text: "完全不喜欢", tags: { extraversion: -2, responsibility: -1 } },
+      { text: "不太喜欢", tags: { extraversion: -1, responsibility: 0 } },
+      { text: "比较喜欢", tags: { extraversion: 1, responsibility: 1 } },
+      { text: "非常喜欢", tags: { extraversion: 2, responsibility: 2 } }
+    ]},
+    { id: "Q11", text: "你面对失败时的态度是？", options: [
+      { text: "很沮丧，难以振作", tags: { emotion_stability: -2 } },
+      { text: "有些消极", tags: { emotion_stability: -1 } },
+      { text: "能较快调整", tags: { emotion_stability: 1 } },
+      { text: "积极乐观", tags: { emotion_stability: 2 } }
+    ]},
+    { id: "Q12", text: "你是否喜欢规划未来？", options: [
+      { text: "完全不喜欢", tags: { responsibility: -2, self_control: -1 } },
+      { text: "不太喜欢", tags: { responsibility: -1, self_control: 0 } },
+      { text: "比较喜欢", tags: { responsibility: 1, self_control: 1 } },
+      { text: "非常喜欢", tags: { responsibility: 2, self_control: 2 } }
+    ]}
   ];
 
   let tagScores = {};
@@ -236,7 +208,8 @@
   const btnNext = document.getElementById("btnNext");
   const btnPrev = document.getElementById("btnPrev");
   const progressText = document.getElementById("progressText");
-  const promptOutput = document.getElementById("promptOutput");
+  const basicAnalysisEl = document.getElementById("basicAnalysis");
+  const premiumAnalysisEl = document.getElementById("premiumAnalysis");
   const btnStart = document.getElementById("btnStart");
   const btnRestart = document.getElementById("btnRestart");
   const inputAge = document.getElementById("inputAge");
@@ -245,7 +218,6 @@
   const radarCanvas = document.getElementById("radarChart");
   const ctx = radarCanvas.getContext("2d");
 
-  // 去除背景渐变，固定白色
   function updateBackgroundColor() {
     document.body.style.backgroundColor = "#fff";
   }
@@ -256,7 +228,6 @@
       el.classList.toggle("selected", i === idx);
     });
     btnNext.disabled = false;
-    // 不调用背景色更新，保持白色
   }
 
   function renderQuestion(index) {
@@ -378,15 +349,30 @@
     return (norm * 100).toFixed(1);
   }
 
-  function generatePrompt(scores) {
+  // 基于2025心理科学进展的初步版个性解析
+  function generateBasicAnalysis(scores) {
     let parts = [];
     for (const dim of geneDimensions) {
       const v = scores[dim.key] || 0;
       if (v >= 4) parts.push(`${dim.label}较高`);
       else if (v <= -4) parts.push(`${dim.label}较低`);
     }
-    if (parts.length === 0) return "个性较为均衡，性格稳定。";
+    if (parts.length === 0) return "你的个性较为均衡，性格稳定，适应力强。";
     return parts.join("，") + "。";
+  }
+
+  // 结合最新心理科学研究成果的深度版个性解析示范
+  function generatePremiumAnalysis(scores) {
+    return `深度解析报告（基于2025心理科学进展）：
+
+- 外向性：${scores.extraversion || 0}。研究表明，外向性高的人更善于建立人际关系，能有效利用社会支持缓解压力。
+- 情绪稳定性：${scores.emotion_stability || 0}。情绪稳定性关联认知偏差矫正能力，影响个体面对逆境时的心理弹性。
+- 新奇寻求：${scores.novelty_seek || 0}。新奇寻求高者倾向于探索创新，适应快速变化的环境，但也需注意冲动控制。
+- 责任感：${scores.responsibility || 0}。责任感强的人在任务完成和自我管理上表现突出，有利于职业发展和生活规划。
+- 自控力：${scores.self_control || 0}。自控力是心理健康的重要指标，关联成瘾行为防治和情绪调节能力。
+- 开放性：${scores.openness || 0}。开放性高的人更容易接受新观点，促进学习和创造力的发展。
+
+本报告基于最新心理学研究成果，如认知偏差矫正训练、情绪调节机制和行为成瘾防治策略，帮助你更深入理解自身个性特点。欲获取完整专业报告，请购买深度解析服务。`;
   }
 
   function setScoreTextColor(total) {
@@ -450,14 +436,17 @@
     totalScoreText.textContent = `综合因子得分：${total}分`;
     totalScoreText.style.color = setScoreTextColor(total);
 
-    promptOutput.textContent = generatePrompt(tagScores);
-  }
+    basicAnalysisEl.textContent = generateBasicAnalysis(tagScores);
 
-  promptOutput.onclick = () => {
-    navigator.clipboard.writeText(promptOutput.textContent)
-      .then(() => alert("Prompt已复制到剪贴板！"))
-      .catch(() => alert("复制失败，请手动复制。"));
-  };
+    premiumAnalysisEl.textContent = "点击购买深度解析服务";
+    premiumAnalysisEl.style.color = "#888";
+    premiumAnalysisEl.style.cursor = "pointer";
+    premiumAnalysisEl.onclick = () => {
+      alert("付费功能暂未开通，敬请期待！");
+      // 这里可接入支付或跳转购买流程
+      // 例如：window.location.href = "支付页面URL";
+    };
+  }
 
 </script>
 

@@ -62,7 +62,6 @@
   <select id="selectGender">
     <option value="male">男性</option>
     <option value="female">女性</option>
-    <option value="other">其他</option>
   </select>
   <button id="btnStart">开始答题</button>
 </div>
@@ -99,10 +98,10 @@
     {
       id: "Q1", text: "你喜欢参加社交活动吗？",
       options: [
-        { text: "非常不喜欢", tags: { extraversion: -2, self_control: -1 } },
-        { text: "不太喜欢", tags: { extraversion: -1, self_control: 0 } },
-        { text: "比较喜欢", tags: { extraversion: 1, self_control: 1 } },
-        { text: "非常喜欢", tags: { extraversion: 2, self_control: 2 } }
+        { text: "非常不喜欢", tags: { extraversion: -2 } },
+        { text: "不太喜欢", tags: { extraversion: -1 } },
+        { text: "比较喜欢", tags: { extraversion: 1 } },
+        { text: "非常喜欢", tags: { extraversion: 2 } }
       ]
     },
     {
@@ -169,12 +168,12 @@
       ]
     },
     {
-      id: "Q9", text: "你是否容易受新事物吸引？",
+      id: "Q9", text: "你喜欢探索未知？",
       options: [
-        { text: "完全不容易", tags: { novelty_seek: -2 } },
-        { text: "偶尔", tags: { novelty_seek: -1 } },
-        { text: "有时", tags: { novelty_seek: 1 } },
-        { text: "非常容易", tags: { novelty_seek: 2 } }
+        { text: "完全不喜欢", tags: { novelty_seek: -2 } },
+        { text: "不太喜欢", tags: { novelty_seek: -1 } },
+        { text: "比较喜欢", tags: { novelty_seek: 1 } },
+        { text: "非常喜欢", tags: { novelty_seek: 2 } }
       ]
     },
     {
@@ -224,7 +223,7 @@
   const totalScoreText = document.getElementById("totalScoreText");
   const promptOutput = document.getElementById("promptOutput");
 
-  // 调整因子
+  // 年龄与性别的调整
   function adjustTags(tags) {
     const adjusted = { ...tags };
 
@@ -236,12 +235,6 @@
     if (gender === "female") {
       adjusted.emotion_stability *= 1.1;
       adjusted.self_control *= 1.1;
-    }
-
-    if (gender === "other") {
-      // 其他性别按男女平均因子计算
-      adjusted.emotion_stability *= 1.05;
-      adjusted.self_control *= 1.05;
     }
 
     return adjusted;
@@ -301,7 +294,7 @@
     drawRadarChart(normalizedScores);
 
     // 生成prompt
-    let prompt = `年龄: ${age}, 性别: ${gender === "male" ? "男性" : gender === "female" ? "女性" : "其他"}\n`;
+    let prompt = `年龄: ${age}, 性别: ${gender === "male" ? "男性" : "女性"}\n`;
     normalizedScores.forEach((score, idx) => {
       prompt += `${geneDimensions[idx].label}: ${score.toFixed(1)} / 100\n`;
     });

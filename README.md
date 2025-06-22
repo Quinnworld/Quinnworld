@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>基因问卷与雷达图评分</title>
+<title>因问卷与雷达图评分</title>
 <style>
   body {
     max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif;
@@ -53,7 +53,7 @@
 </head>
 <body>
 
-<h2>基因科学问卷 & 雷达图评分</h2>
+<h2>因问卷 & 雷达图评分</h2>
 
 <div id="sectionUserInfo">
   <label for="inputAge">年龄（不限）</label>
@@ -74,16 +74,16 @@
 </div>
 
 <div id="sectionResult" style="display:none;">
-  <h3>雷达图基因维度评分</h3>
+  <h3>因风格评分雷达图</h3>
   <canvas id="radarChart" width="400" height="400"></canvas>
   <div id="totalScoreText"></div>
-  <h3>基因风格Prompt（点击可复制）</h3>
+  <h3>因风格Prompt（点击可复制）</h3>
   <pre id="promptOutput" title="点击复制"></pre>
   <button id="btnRestart">重新开始</button>
 </div>
 
 <script>
-  // 六个基因维度（中文）
+  // 六个因维度（中文）
   const geneDimensions = [
     { key: "extraversion", label: "外向性" },
     { key: "emotion_stability", label: "情绪稳定性" },
@@ -93,7 +93,7 @@
     { key: "openness", label: "开放性" }
   ];
 
-  // 12题题库，每题4选项，对应六个维度评分-2~2
+  // 12题题库，每题4选项，对应六个因维度评分-2~2
   const questionPool = [
     {
       id: "Q1", text: "你喜欢参加社交活动吗？",
@@ -141,12 +141,12 @@
       ]
     },
     {
-      id: "Q6", text: "你是否喜欢探索未知？",
+      id: "Q6", text: "你喜欢艺术和创造性活动吗？",
       options: [
-        { text: "完全不喜欢", tags: { novelty_seek: -2 } },
-        { text: "不太喜欢", tags: { novelty_seek: -1 } },
-        { text: "比较喜欢", tags: { novelty_seek: 1 } },
-        { text: "非常喜欢", tags: { novelty_seek: 2 } }
+        { text: "完全不喜欢", tags: { openness: -2 } },
+        { text: "不太喜欢", tags: { openness: -1 } },
+        { text: "比较喜欢", tags: { openness: 1 } },
+        { text: "非常喜欢", tags: { openness: 2 } }
       ]
     },
     {
@@ -168,47 +168,46 @@
       ]
     },
     {
-      id: "Q9", text: "你喜欢艺术和创造性活动吗？",
+      id: "Q9", text: "你喜欢探索未知？",
       options: [
-        { text: "完全不喜欢", tags: { openness: -2 } },
-        { text: "不太喜欢", tags: { openness: -1 } },
-        { text: "比较喜欢", tags: { openness: 1 } },
-        { text: "非常喜欢", tags: { openness: 2 } }
+        { text: "完全不喜欢", tags: { novelty_seek: -2 } },
+        { text: "不太喜欢", tags: { novelty_seek: -1 } },
+        { text: "比较喜欢", tags: { novelty_seek: 1 } },
+        { text: "非常喜欢", tags: { novelty_seek: 2 } }
       ]
     },
     {
-      id: "Q10", text: "你觉得自己是一个外向的人吗？",
+      id: "Q10", text: "你是否容易焦虑？",
       options: [
-        { text: "非常内向", tags: { extraversion: -2 } },
-        { text: "有点内向", tags: { extraversion: -1 } },
-        { text: "有点外向", tags: { extraversion: 1 } },
-        { text: "非常外向", tags: { extraversion: 2 } }
+        { text: "从不", tags: { emotion_stability: 2 } },
+        { text: "偶尔", tags: { emotion_stability: 1 } },
+        { text: "有时", tags: { emotion_stability: -1 } },
+        { text: "经常", tags: { emotion_stability: -2 } }
       ]
     },
     {
-      id: "Q11", text: "你是否喜欢计划并遵守计划？",
+      id: "Q11", text: "你待人是否友好与合作？",
       options: [
-        { text: "完全不喜欢", tags: { responsibility: -2 } },
-        { text: "不太喜欢", tags: { responsibility: -1 } },
-        { text: "比较喜欢", tags: { responsibility: 1 } },
-        { text: "非常喜欢", tags: { responsibility: 2 } }
+        { text: "不太友好", tags: { self_control: -2 } },
+        { text: "有时冷淡", tags: { self_control: -1 } },
+        { text: "比较友好", tags: { self_control: 1 } },
+        { text: "非常友好", tags: { self_control: 2 } }
       ]
     },
     {
-      id: "Q12", text: "你是否愿意接受新观点和改变？",
+      id: "Q12", text: "你愿意为他人着想吗？",
       options: [
-        { text: "完全不愿意", tags: { openness: -2 } },
-        { text: "不太愿意", tags: { openness: -1 } },
-        { text: "比较愿意", tags: { openness: 1 } },
-        { text: "非常愿意", tags: { openness: 2 } }
+        { text: "完全不愿", tags: { self_control: -2 } },
+        { text: "偶尔愿意", tags: { self_control: -1 } },
+        { text: "比较愿意", tags: { self_control: 1 } },
+        { text: "总是愿意", tags: { self_control: 2 } }
       ]
     }
   ];
 
+  // 计算分数
   let tagScores = {};
   let askedIds = new Set();
-  let currentQuestion = null;
-  let selectedOptionIndex = null;
   let questionCount = 0;
   const maxQuestions = 12;
   let age = 25;
@@ -221,232 +220,144 @@
   const optionsEl = document.getElementById("optionsContainer");
   const btnNext = document.getElementById("btnNext");
   const progressText = document.getElementById("progressText");
-  const promptOutput = document.getElementById("promptOutput");
-  const btnStart = document.getElementById("btnStart");
-  const btnRestart = document.getElementById("btnRestart");
-  const inputAge = document.getElementById("inputAge");
-  const selectGender = document.getElementById("selectGender");
   const totalScoreText = document.getElementById("totalScoreText");
-  const radarCanvas = document.getElementById("radarChart");
-  const ctx = radarCanvas.getContext("2d");
+  const promptOutput = document.getElementById("promptOutput");
 
-  function selectOption(idx) {
-    selectedOptionIndex = idx;
-    Array.from(optionsEl.children).forEach((el, i) => {
-      el.classList.toggle("selected", i === idx);
-    });
-    btnNext.disabled = false;
+  // 年龄与性别的调整
+  function adjustTags(tags) {
+    const adjusted = { ...tags };
+
+    if (age < 30) {
+      adjusted.novelty_seek *= 1.2;
+      adjusted.openness *= 1.2;
+    }
+
+    if (gender === "female") {
+      adjusted.emotion_stability *= 1.1;
+      adjusted.self_control *= 1.1;
+    }
+
+    return adjusted;
   }
 
+  // 渲染问题
   function renderQuestion(q) {
-    currentQuestion = q;
     qTextEl.textContent = q.text;
-    optionsEl.innerHTML = "";
-    selectedOptionIndex = null;
-    btnNext.disabled = true;
+    optionsEl.innerHTML = '';
     for (let i = 0; i < q.options.length; i++) {
-      const opt = document.createElement("div");
-      opt.className = "option";
-      opt.textContent = q.options[i].text;
-      opt.onclick = () => selectOption(i);
-      optionsEl.appendChild(opt);
+      const option = document.createElement("div");
+      option.className = "option";
+      option.textContent = q.options[i].text;
+      option.onclick = () => selectOption(i, q);
+      optionsEl.appendChild(option);
     }
+    btnNext.disabled = true;
     progressText.textContent = `第 ${questionCount + 1} / ${maxQuestions} 题`;
   }
 
-  function selectNextQuestion() {
-    for (let q of questionPool) {
-      if (!askedIds.has(q.id)) return q;
+  // 选择选项
+  function selectOption(index, q) {
+    const selectedOption = q.options[index];
+    for (let key in selectedOption.tags) {
+      tagScores[key] = (tagScores[key] || 0) + selectedOption.tags[key];
     }
-    return null;
+    askedIds.add(q.id);
+    questionCount++;
+    if (questionCount < maxQuestions) {
+      const nextQ = questionPool[Math.floor(Math.random() * questionPool.length)];
+      renderQuestion(nextQ);
+    } else {
+      showResult();
+    }
+    btnNext.disabled = false;
   }
 
-  btnNext.onclick = () => {
-    if (selectedOptionIndex === null) return;
-    const selTags = currentQuestion.options[selectedOptionIndex].tags;
-    for (let t in selTags) {
-      tagScores[t] = (tagScores[t] || 0) + selTags[t];
-    }
-    askedIds.add(currentQuestion.id);
-    questionCount++;
-    if (questionCount >= maxQuestions) {
-      showResult();
-    } else {
-      const nextQ = selectNextQuestion();
-      if (!nextQ) {
-        showResult();
-      } else {
-        renderQuestion(nextQ);
-      }
-    }
-  };
-
-  btnStart.onclick = () => {
-    age = parseInt(inputAge.value);
-    if (isNaN(age) || age < 0) {
-      alert("请输入有效年龄（非负整数）");
-      return;
-    }
-    gender = selectGender.value;
-    tagScores = {};
-    askedIds.clear();
-    questionCount = 0;
-    sectionUserInfo.style.display = "none";
-    sectionResult.style.display = "none";
-    sectionQuiz.style.display = "block";
-    const firstQ = selectNextQuestion();
-    renderQuestion(firstQ);
-  };
-
-  btnRestart.onclick = () => {
-    tagScores = {};
-    askedIds.clear();
-    questionCount = 0;
-    sectionResult.style.display = "none";
+  // 计算并显示结果
+  function showResult() {
     sectionQuiz.style.display = "none";
-    sectionUserInfo.style.display = "block";
-  };
+    sectionResult.style.display = "block";
 
-  // 绘制雷达图辅助函数
-  function drawRadarChart(scores, age, gender) {
-    const w = radarCanvas.width;
-    const h = radarCanvas.height;
-    ctx.clearRect(0, 0, w, h);
-    const cx = w / 2;
-    const cy = h / 2;
-    const radius = Math.min(cx, cy) * 0.75;
-    const dimCount = geneDimensions.length;
-    const angleStep = (2 * Math.PI) / dimCount;
-
-    // 根据性别和年龄计算颜色渐变
-    // 男性主蓝，女性主红，年龄越大颜色越浅
-    let baseColor;
-    if (gender === "male") baseColor = [60, 120, 240];  // 蓝色
-    else baseColor = [240, 80, 80];  // 红色
-    const ageFactor = Math.min(age / 100, 1);
-    // 颜色渐变到白色
-    function blendColor(c, factor) {
-      return c.map(ch => Math.round(ch + factor * (255 - ch)));
-    }
-    const fillColorRGB = blendColor(baseColor, ageFactor);
-    const strokeColorRGB = blendColor(baseColor, ageFactor * 0.5);
-
-    const fillColor = `rgba(${fillColorRGB.join(",")},0.4)`;
-    const strokeColor = `rgba(${strokeColorRGB.join(",")},0.8)`;
-    const axisColor = "rgba(0,0,0,0.2)";
-
-    // 画多边形网格（5层）
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = axisColor;
-    ctx.fillStyle = "transparent";
-    for (let level = 1; level <= 5; level++) {
-      ctx.beginPath();
-      for (let i = 0; i < dimCount; i++) {
-        const r = (radius * level) / 5;
-        const x = cx + r * Math.sin(i * angleStep);
-        const y = cy - r * Math.cos(i * angleStep);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.closePath();
-      ctx.stroke();
-    }
-
-    // 画轴线及标签
-    ctx.fillStyle = "#222";
-    ctx.font = "14px 微软雅黑";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    for (let i = 0; i < dimCount; i++) {
-      const x = cx + radius * Math.sin(i * angleStep);
-      const y = cy - radius * Math.cos(i * angleStep);
-      // 轴线
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-
-      // 标签
-      const label = geneDimensions[i].label;
-      const labelX = cx + (radius + 25) * Math.sin(i * angleStep);
-      const labelY = cy - (radius + 25) * Math.cos(i * angleStep);
-      ctx.fillText(label, labelX, labelY);
-    }
-
-    // 计算归一化分数 0~100
-    // 假设每维度最大绝对值8（12题，单题最大2分）
+    // 计算得分
     const normalizedScores = geneDimensions.map(dim => {
-      const raw = scores[dim.key] || 0;
-      let norm = (raw + 8) / 16; // 0~1
-      norm = Math.min(1, Math.max(0, norm));
-      return norm;
+      const raw = tagScores[dim.key] || 0;
+      let score = (raw + 8) / 16 * 100; // 范围从0到100
+      score = Math.min(100, Math.max(0, score));
+      return score;
     });
 
-    // 画雷达图区域
+    // 计算总分（平均）
+    const totalScore = (normalizedScores.reduce((sum, score) => sum + score, 0) / normalizedScores.length).toFixed(1);
+
+    totalScoreText.textContent = `总分: ${totalScore}`;
+
+    // 绘制雷达图
+    drawRadarChart(normalizedScores);
+
+    // 生成prompt
+    let prompt = `年龄: ${age}, 性别: ${gender === "male" ? "男性" : "女性"}\n`;
+    normalizedScores.forEach((score, idx) => {
+      prompt += `${geneDimensions[idx].label}: ${score.toFixed(1)} / 100\n`;
+    });
+
+    promptOutput.textContent = prompt.trim();
+  }
+
+  // 绘制雷达图
+  function drawRadarChart(scores) {
+    const canvas = document.getElementById("radarChart");
+    const ctx = canvas.getContext("2d");
+    const radius = 150;
+    const angleStep = (Math.PI * 2) / scores.length;
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    // 清空画布
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 画六边形（外圈）
     ctx.beginPath();
-    for (let i = 0; i < dimCount; i++) {
-      const r = normalizedScores[i] * radius;
+    for (let i = 0; i < scores.length; i++) {
+      const r = scores[i] * radius / 100;
       const x = cx + r * Math.sin(i * angleStep);
       const y = cy - r * Math.cos(i * angleStep);
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
     ctx.closePath();
-
-    ctx.fillStyle = fillColor;
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 2;
+    ctx.fillStyle = "rgba(75, 192, 192, 0.2)";
+    ctx.strokeStyle = "rgba(75, 192, 192, 1)";
     ctx.fill();
     ctx.stroke();
 
-    // 画节点小圆点
-    ctx.fillStyle = strokeColor;
-    for (let i = 0; i < dimCount; i++) {
-      const r = normalizedScores[i] * radius;
+    // 画节点
+    ctx.fillStyle = "rgba(75, 192, 192, 1)";
+    for (let i = 0; i < scores.length; i++) {
+      const r = scores[i] * radius / 100;
       const x = cx + r * Math.sin(i * angleStep);
       const y = cy - r * Math.cos(i * angleStep);
       ctx.beginPath();
       ctx.arc(x, y, 5, 0, 2 * Math.PI);
       ctx.fill();
     }
-
-    return normalizedScores;
   }
 
-  function showResult() {
-    sectionQuiz.style.display = "none";
-    sectionResult.style.display = "block";
+  // 重新开始
+  document.getElementById("btnRestart").onclick = () => {
+    tagScores = {};
+    askedIds.clear();
+    questionCount = 0;
+    sectionResult.style.display = "none";
+    sectionUserInfo.style.display = "block";
+  };
 
-    // 计算归一化分数0~100，保留一位小数
-    const normalizedScores = geneDimensions.map(dim => {
-      const raw = tagScores[dim.key] || 0;
-      let norm = (raw + 8) / 16 * 100; // 0~100
-      norm = Math.min(100, Math.max(0, norm));
-      return +norm.toFixed(1);
-    });
-
-    // 总分 = 六维度平均，0~100，1位小数
-    const totalScoreRaw = normalizedScores.reduce((a, b) => a + b, 0) / normalizedScores.length;
-    const totalScore = totalScoreRaw.toFixed(1);
-    totalScoreText.textContent = `总分: ${totalScore}`;
-
-    // 画雷达图
-    drawRadarChart(tagScores, age, gender);
-
-    // 生成prompt文本，包含年龄、性别、六维度分数
-    let prompt = `Age: ${age}, Gender: ${gender === "male" ? "Male" : "Female"}\n`;
-    geneDimensions.forEach((dim, idx) => {
-      prompt += `${dim.label}: ${normalizedScores[idx]} / 100\n`;
-    });
-
-    promptOutput.textContent = prompt.trim();
-  }
-
-  // 点击prompt复制
-  promptOutput.onclick = () => {
-    navigator.clipboard.writeText(promptOutput.textContent).then(() => {
-      alert("已复制Prompt文本");
-    });
+  // 开始答题
+  document.getElementById("btnStart").onclick = () => {
+    age = parseInt(document.getElementById("inputAge").value);
+    gender = document.getElementById("selectGender").value;
+    sectionUserInfo.style.display = "none";
+    sectionQuiz.style.display = "block";
+    const firstQ = questionPool[Math.floor(Math.random() * questionPool.length)];
+    renderQuestion(firstQ);
   };
 </script>
 

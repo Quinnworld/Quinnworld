@@ -3,27 +3,29 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>基因科学多标签问卷 + 多标签雷达图 + 动漫Prompt</title>
+<title>基因科学问卷 + 动漫Prompt生成（12题版）</title>
 <style>
-  body { max-width: 700px; margin: 20px auto; font-family: "微软雅黑", sans-serif; background: #f0f4f8; padding: 20px; }
-  h2, h3 { text-align: center; }
+  body { max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif; background: #f0f4f8; padding: 20px; }
+  h2 { text-align: center; }
   label { display: block; margin: 10px 0 5px; font-weight: 600; }
-  select, input[type=number] { width: 100%; padding: 8px; font-size: 16px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc; }
+  input[type=number], select { width: 100%; padding: 8px; font-size: 16px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc; }
   .section { margin-bottom: 20px; }
   .question { font-weight: 700; margin-bottom: 10px; }
   .option { background: white; border: 1px solid #bbb; border-radius: 6px; padding: 10px; margin: 6px 0; cursor: pointer; user-select:none; }
   .option.selected { background: #4f46e5; color: white; border-color: #4338ca; }
   button { width: 100%; padding: 12px; font-size: 16px; border: none; border-radius: 6px; background: #4338ca; color: white; cursor: pointer; }
   button:disabled { background: #a5b4fc; cursor: not-allowed; }
-  #radarChart { max-width: 600px; margin: 0 auto; }
   pre { background: #eee; padding: 10px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; }
+  canvas { background: white; border-radius: 6px; margin-top: 15px; }
 </style>
 </head>
 <body>
 
-<h2>基因科学多标签问卷 + 动漫风格Prompt生成</h2>
+<h2>基因科学问卷 + 动漫Prompt生成（12题）</h2>
 
 <div class="section" id="sectionUserInfo">
+  <label for="inputAge">年龄（不限）</label>
+  <input type="number" id="inputAge" placeholder="请输入您的年龄" />
   <label for="selectGender">性别</label>
   <select id="selectGender">
     <option value="male">男性</option>
@@ -40,207 +42,226 @@
 </div>
 
 <div class="section" id="sectionResult" style="display:none;">
-  <h3>Gene Function Scores Radar Chart</h3>
-  <canvas id="radarChart" width="600" height="600"></canvas>
-  <h3>Generated Anime-style Prompt:</h3>
+  <h3>Genetic Trait Scores Radar Chart</h3>
+  <canvas id="radarChart" width="400" height="400"></canvas>
+  <h3>Generated Anime-style Prompt (English)</h3>
   <pre id="promptOutput"></pre>
   <button id="btnRestart">重新开始</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // 基因功能标签列表
-  const geneTags = [
-    "attention", "memory", "learning_speed", "creativity", "language_ability",
-    "muscle_strength", "endurance", "recovery", "coordination", "flexibility",
-    "appetite_control", "lipid_metabolism", "fat_distribution", "energy_expenditure",
-    "anxiety", "depression", "impulsivity", "sociality", "empathy",
-    "inflammation_resistance", "infection_susceptibility", "allergy_tendency", "autoimmune_risk",
-    "cell_repair", "antioxidant_capacity", "mitochondrial_function",
-    "sleep_quality", "stress_tolerance", "drug_metabolism", "pain_sensitivity", "mood_stability", "self_control"
+  // 6个核心基因功能维度，基于基因科学划分
+  const geneDimensions = [
+    "Extraversion",
+    "Emotional Stability",
+    "Cognitive Ability",
+    "Physical Endurance",
+    "Immune Response",
+    "Metabolism Efficiency"
   ];
 
-  // 示例题库3题，实际请扩充到250题
-  const questionPool = [
-    {
-      id: "Q001",
-      text: "你觉得自己在注意力集中方面表现如何？",
-      options: [
-        { text: "非常差", tags: { attention: -3, stress_tolerance: -1 } },
-        { text: "稍差", tags: { attention: -1, stress_tolerance: 0 } },
-        { text: "一般", tags: { attention: 1, stress_tolerance: 1 } },
-        { text: "非常好", tags: { attention: 3, stress_tolerance: 2 } }
-      ]
-    },
-    {
-      id: "Q002",
-      text: "你觉得自己情绪稳定吗？",
-      options: [
-        { text: "很不稳定", tags: { mood_stability: -3, anxiety: 3 } },
-        { text: "有些波动", tags: { mood_stability: -1, anxiety: 1 } },
-        { text: "比较稳定", tags: { mood_stability: 1, anxiety: -1 } },
-        { text: "非常稳定", tags: { mood_stability: 3, anxiety: -3 } }
-      ]
-    },
-    {
-      id: "Q003",
-      text: "你做事冲动吗？",
-      options: [
-        { text: "非常冲动", tags: { impulsivity: 3, self_control: -3 } },
-        { text: "有时冲动", tags: { impulsivity: 1, self_control: -1 } },
-        { text: "比较克制", tags: { impulsivity: -1, self_control: 1 } },
-        { text: "非常克制", tags: { impulsivity: -3, self_control: 3 } }
-      ]
-    }
+  // 12题题库，4选项，分值-2~2，严格关联6个基因维度
+  const questions = [
+    { text: "你喜欢参加社交活动吗？", options: [
+      { text: "非常不喜欢", scores: {Extraversion:-2} },
+      { text: "不太喜欢", scores: {Extraversion:-1} },
+      { text: "比较喜欢", scores: {Extraversion:1} },
+      { text: "非常喜欢", scores: {Extraversion:2} },
+    ]},
+    { text: "面对压力时你情绪稳定吗？", options: [
+      { text: "非常不稳定", scores: {Emotional Stability:-2} },
+      { text: "有些不稳定", scores: {Emotional Stability:-1} },
+      { text: "较为稳定", scores: {Emotional Stability:1} },
+      { text: "非常稳定", scores: {Emotional Stability:2} },
+    ]},
+    { text: "你觉得自己学习和思考能力如何？", options: [
+      { text: "较差", scores: {Cognitive Ability:-2} },
+      { text: "一般", scores: {Cognitive Ability:-1} },
+      { text: "较好", scores: {Cognitive Ability:1} },
+      { text: "非常好", scores: {Cognitive Ability:2} },
+    ]},
+    { text: "你平时体力和耐力如何？", options: [
+      { text: "很差", scores: {Physical Endurance:-2} },
+      { text: "一般", scores: {Physical Endurance:-1} },
+      { text: "较好", scores: {Physical Endurance:1} },
+      { text: "非常好", scores: {Physical Endurance:2} },
+    ]},
+    { text: "你容易生病或感冒吗？", options: [
+      { text: "非常容易", scores: {Immune Response:-2} },
+      { text: "偶尔生病", scores: {Immune Response:-1} },
+      { text: "很少生病", scores: {Immune Response:1} },
+      { text: "几乎不生病", scores: {Immune Response:2} },
+    ]},
+    { text: "你的新陈代谢情况如何？", options: [
+      { text: "代谢差，容易发胖", scores: {Metabolism Efficiency:-2} },
+      { text: "代谢一般", scores: {Metabolism Efficiency:-1} },
+      { text: "代谢较好", scores: {Metabolism Efficiency:1} },
+      { text: "代谢非常好", scores: {Metabolism Efficiency:2} },
+    ]},
+    { text: "你喜欢主动和别人交流吗？", options: [
+      { text: "不喜欢", scores: {Extraversion:-2} },
+      { text: "有时不喜欢", scores: {Extraversion:-1} },
+      { text: "比较喜欢", scores: {Extraversion:1} },
+      { text: "非常喜欢", scores: {Extraversion:2} },
+    ]},
+    { text: "遇到困难时你的情绪控制如何？", options: [
+      { text: "很差，经常焦虑", scores: {Emotional Stability:-2} },
+      { text: "有些波动", scores: {Emotional Stability:-1} },
+      { text: "较为平稳", scores: {Emotional Stability:1} },
+      { text: "非常平稳", scores: {Emotional Stability:2} },
+    ]},
+    { text: "你能快速理解复杂事物吗？", options: [
+      { text: "较慢", scores: {Cognitive Ability:-2} },
+      { text: "一般", scores: {Cognitive Ability:-1} },
+      { text: "较快", scores: {Cognitive Ability:1} },
+      { text: "非常快", scores: {Cognitive Ability:2} },
+    ]},
+    { text: "你平时运动耐力如何？", options: [
+      { text: "差", scores: {Physical Endurance:-2} },
+      { text: "一般", scores: {Physical Endurance:-1} },
+      { text: "好", scores: {Physical Endurance:1} },
+      { text: "非常好", scores: {Physical Endurance:2} },
+    ]},
+    { text: "你免疫系统反应强吗？", options: [
+      { text: "很弱", scores: {Immune Response:-2} },
+      { text: "一般", scores: {Immune Response:-1} },
+      { text: "较强", scores: {Immune Response:1} },
+      { text: "非常强", scores: {Immune Response:2} },
+    ]},
+    { text: "你的新陈代谢速度怎么样？", options: [
+      { text: "慢", scores: {Metabolism Efficiency:-2} },
+      { text: "一般", scores: {Metabolism Efficiency:-1} },
+      { text: "快", scores: {Metabolism Efficiency:1} },
+      { text: "非常快", scores: {Metabolism Efficiency:2} },
+    ]},
   ];
 
-  const maxQuestions = 15; // 每次答题15题
-  let selectedQuestions = [];
+  let scores = {};
+  geneDimensions.forEach(d => scores[d] = 0);
+
   let currentIndex = 0;
-  let tagScores = {};
-  let selectedOptionIndex = null;
-  let gender = "male";
+  let selectedOption = -1;
 
-  // 页面元素引用
-  const sectionUserInfo = document.getElementById("sectionUserInfo");
-  const sectionQuiz = document.getElementById("sectionQuiz");
-  const sectionResult = document.getElementById("sectionResult");
-  const qTextEl = document.getElementById("questionText");
-  const optionsEl = document.getElementById("optionsContainer");
-  const btnNext = document.getElementById("btnNext");
-  const progressText = document.getElementById("progressText");
-  const promptOutput = document.getElementById("promptOutput");
-  const btnStart = document.getElementById("btnStart");
-  const btnRestart = document.getElementById("btnRestart");
-  const selectGender = document.getElementById("selectGender");
+  const sectionUserInfo = document.getElementById('sectionUserInfo');
+  const sectionQuiz = document.getElementById('sectionQuiz');
+  const sectionResult = document.getElementById('sectionResult');
 
-  // 选项点击事件
-  function selectOption(idx){
-    selectedOptionIndex = idx;
-    Array.from(optionsEl.children).forEach((el,i)=>{
-      el.classList.toggle("selected", i === idx);
-    });
-    btnNext.disabled = false;
-  }
+  const inputAge = document.getElementById('inputAge');
+  const selectGender = document.getElementById('selectGender');
+  const btnStart = document.getElementById('btnStart');
+  const questionText = document.getElementById('questionText');
+  const optionsContainer = document.getElementById('optionsContainer');
+  const btnNext = document.getElementById('btnNext');
+  const progressText = document.getElementById('progressText');
+  const promptOutput = document.getElementById('promptOutput');
+  const btnRestart = document.getElementById('btnRestart');
 
-  // 数组打乱函数
-  function shuffleArray(arr){
-    for(let i = arr.length - 1; i > 0; i--){
-      let j = Math.floor(Math.random() * (i+1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+  btnStart.onclick = () => {
+    if (inputAge.value === "") {
+      alert("请输入年龄");
+      return;
     }
-    return arr;
-  }
-
-  // 开始答题按钮事件
-  btnStart.onclick = ()=>{
-    gender = selectGender.value;
-    tagScores = {};
-    selectedOptionIndex = null;
-    currentIndex = 0;
-    btnNext.disabled = true;
-    // 打乱题库并取前maxQuestions题
-    selectedQuestions = shuffleArray([...questionPool]).slice(0, maxQuestions);
     sectionUserInfo.style.display = "none";
-    sectionResult.style.display = "none";
     sectionQuiz.style.display = "block";
-    renderQuestion(selectedQuestions[currentIndex]);
+    currentIndex = 0;
+    resetScores();
+    showQuestion(currentIndex);
   };
 
-  // 渲染当前题目和选项
-  function renderQuestion(q){
-    qTextEl.textContent = q.text;
-    optionsEl.innerHTML = "";
-    selectedOptionIndex = null;
+  btnRestart.onclick = () => {
+    sectionResult.style.display = "none";
+    sectionUserInfo.style.display = "block";
     btnNext.disabled = true;
-    for(let i=0; i<q.options.length; i++){
-      const opt = document.createElement("div");
-      opt.className = "option";
-      opt.textContent = q.options[i].text;
-      opt.onclick = ()=>selectOption(i);
-      optionsEl.appendChild(opt);
-    }
-    progressText.textContent = `第 ${currentIndex+1} / ${maxQuestions} 题`;
+    selectedOption = -1;
+    promptOutput.textContent = "";
+  };
+
+  function resetScores() {
+    geneDimensions.forEach(d => scores[d] = 0);
   }
 
-  // 下一题按钮事件
-  btnNext.onclick = ()=>{
-    if(selectedOptionIndex === null) return;
-    // 累加标签分数
-    const selectedTags = selectedQuestions[currentIndex].options[selectedOptionIndex].tags;
-    for(let tag in selectedTags){
-      tagScores[tag] = (tagScores[tag] || 0) + selectedTags[tag];
+  function showQuestion(idx) {
+    selectedOption = -1;
+    btnNext.disabled = true;
+    let q = questions[idx];
+    questionText.textContent = `${idx + 1}. ${q.text}`;
+    optionsContainer.innerHTML = "";
+    q.options.forEach((opt, i) => {
+      const div = document.createElement("div");
+      div.className = "option";
+      div.textContent = opt.text;
+      div.onclick = () => {
+        selectedOption = i;
+        btnNext.disabled = false;
+        Array.from(optionsContainer.children).forEach((c, j) => {
+          c.classList.toggle("selected", i === j);
+        });
+      };
+      optionsContainer.appendChild(div);
+    });
+    progressText.textContent = `题目 ${idx + 1} / ${questions.length}`;
+  }
+
+  btnNext.onclick = () => {
+    if (selectedOption === -1) return;
+    const selectedScores = questions[currentIndex].options[selectedOption].scores;
+    for (const dim in selectedScores) {
+      if (scores.hasOwnProperty(dim)) {
+        scores[dim] += selectedScores[dim];
+      }
     }
     currentIndex++;
-    if(currentIndex >= maxQuestions){
-      showResult();
+    if (currentIndex < questions.length) {
+      showQuestion(currentIndex);
     } else {
-      renderQuestion(selectedQuestions[currentIndex]);
+      sectionQuiz.style.display = "none";
+      showResult();
+      sectionResult.style.display = "block";
     }
   };
 
-  // 归一化标签分数到0-100
-  function normalizeScores(scores){
-    let normalized = {};
-    const maxScore = maxQuestions * 3; // 最大可能分数
-    for(let tag of geneTags){
-      let val = scores[tag] || 0;
-      let score = ((val + maxScore) / (2 * maxScore)) * 100;
-      if(score > 100) score = 100;
-      if(score < 0) score = 0;
-      normalized[tag] = Math.round(score);
-    }
-    return normalized;
+  function normalize(val) {
+    // 12题，每题范围[-2,2],最大24分，最小-24分，映射0~100
+    let norm = (val + questions.length * 2) / (questions.length * 4) * 100;
+    if (norm > 100) norm = 100;
+    if (norm < 0) norm = 0;
+    return Math.round(norm);
   }
 
-  // 生成动漫风格英文Prompt（简化示范）
-  function generatePrompt(normalizedTags){
-    let descs = [];
-    if(normalizedTags.creativity > 70) descs.push("creative and imaginative");
-    else if(normalizedTags.creativity < 30) descs.push("practical and down-to-earth");
+  let radarChartInstance = null;
+  function showResult() {
+    const normalizedScores = geneDimensions.map(d => normalize(scores[d]));
+    const age = inputAge.value;
+    const gender = selectGender.value === "male" ? "male" : "female";
 
-    if(normalizedTags.anxiety > 70) descs.push("often anxious or worried");
-    else if(normalizedTags.anxiety < 30) descs.push("calm and relaxed");
+    renderRadarChart(geneDimensions, normalizedScores);
 
-    if(normalizedTags.sociality > 70) descs.push("friendly and outgoing");
-    else if(normalizedTags.sociality < 30) descs.push("introverted and reserved");
+    let lines = [];
+    lines.push(`Anime-style portrait of a ${gender} character, aged ${age},`);
+    lines.push("with the following genetic trait scores (0-100 scale):");
+    geneDimensions.forEach((d, i) => {
+      lines.push(`- ${d}: ${normalizedScores[i]}`);
+    });
+    lines.push("The character's appearance and personality reflect these genetic influences.");
 
-    if(normalizedTags.self_control > 70) descs.push("excellent self-control");
-    else if(normalizedTags.self_control < 30) descs.push("impulsive and spontaneous");
-
-    if(normalizedTags.endurance > 70) descs.push("physically strong and enduring");
-    else if(normalizedTags.endurance < 30) descs.push("physically delicate and sensitive");
-
-    if(normalizedTags.mood_stability > 70) descs.push("emotionally stable and balanced");
-    else if(normalizedTags.mood_stability < 30) descs.push("emotionally volatile");
-
-    return `Anime-style portrait of a ${gender === "male" ? "young man" : "young woman"} who is ${descs.join(", ")}, with an expressive face and dynamic posture.`;
+    promptOutput.textContent = lines.join("\n");
   }
 
-  // 展示结果页面
-  function showResult(){
-    sectionQuiz.style.display = "none";
-    sectionResult.style.display = "block";
-
-    const normalized = normalizeScores(tagScores);
-
+  function renderRadarChart(labels, data) {
     const ctx = document.getElementById("radarChart").getContext("2d");
-    if(window.radarChartInstance) window.radarChartInstance.destroy();
-
-    window.radarChartInstance = new Chart(ctx, {
-      type: 'radar',
+    if (radarChartInstance) radarChartInstance.destroy();
+    radarChartInstance = new Chart(ctx, {
+      type: "radar",
       data: {
-        labels: geneTags.map(t=>t.replace(/_/g, ' ')),
+        labels: labels,
         datasets: [{
-          label: 'Gene Function Scores',
-          data: geneTags.map(t => normalized[t]),
-          fill: true,
-          backgroundColor: 'rgba(67,56,202,0.2)',
-          borderColor: 'rgba(67,56,202,1)',
-          pointBackgroundColor: 'rgba(67,56,202,1)',
-          pointBorderColor: '#fff',
-          pointHoverBackgroundColor: '#fff',
-          pointHoverBorderColor: 'rgba(67,56,202,1)'
+          label: "Genetic Trait Scores",
+          data: data,
+          backgroundColor: "rgba(67,56,202,0.3)",
+          borderColor: "rgba(67,56,202,1)",
+          borderWidth: 2,
+          pointBackgroundColor: "rgba(67,56,202,1)"
         }]
       },
       options: {
@@ -249,7 +270,7 @@
             min: 0,
             max: 100,
             ticks: { stepSize: 20 },
-            pointLabels: { font: { size: 11 } }
+            pointLabels: { font: { size: 12 } }
           }
         },
         plugins: {
@@ -257,14 +278,6 @@
         }
       }
     });
-
-    promptOutput.textContent = generatePrompt(normalized);
-  }
-
-  // 重新开始按钮
-  btnRestart.onclick = ()=>{
-    sectionResult.style.display = "none";
-    sectionUserInfo.style.display = "block";
   }
 </script>
 

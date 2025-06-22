@@ -1,45 +1,13 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <title>基因—个性报告自动化脚本</title>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; background: #f9f9f9; }
-    h1 { color: #333; }
-    pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 4px; overflow-x: auto; }
-    code { font-family: Consolas, monospace; font-size: 14px; }
-    .section { margin-bottom: 30px; }
-  </style>
-</head>
-<body>
-
-  <h1>基因—个性报告自动化脚本</h1>
-
-  <div class="section">
-    <h2>使用说明</h2>
-    <ol>
-      <li>将本文件另存为 <code>report_generator.html</code>（可直接在 GitHub 仓库中查看）。</li>
-      <li>在同级目录新建 <code>requirements.txt</code>，添加以下内容：<br>
-        <code>pandas<br>numpy<br>matplotlib</code>
-      </li>
-      <li>在本地或服务器上运行：<br>
-        <code>pip install -r requirements.txt<br>python report_generator.py</code>
-      </li>
-    </ol>
-  </div>
-
-  <div class="section">
-    <h2>完整脚本：report_generator.py</h2>
-    <pre><code>#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Report Generator: 基因—个性自动化脚本
 
 使用方法：
-1. 在同级目录创建 requirements.txt，内容：
+1. 在同级目录创建文件 requirements.txt，内容：
    pandas
    numpy
    matplotlib
-2. 安装依赖并运行：
+2. 安装依赖并运行脚本：
    pip install -r requirements.txt
    python report_generator.py
 """
@@ -126,25 +94,3 @@ if __name__ == '__main__':
         # TODO: 用实际深度报告内容替换占位符
         f.write(b"%PDF-1.4\n% 深度报告内容占位符\n")
     print(f"\n深度报告已生成（付费下载）：{os.path.abspath(deep_report_path)}")
-    </code></pre>
-  </div>
-
-  <div class="section">
-    <h2>requirements.txt</h2>
-    <pre><code>pandas
-numpy
-matplotlib</code></pre>
-  </div>
-
-  <div class="section">
-    <h2>部署与运行</h2>
-    <p>
-      克隆此仓库后，将以上两个文件放在同级目录，执行：
-    </p>
-    <pre><code>pip install -r requirements.txt
-python report_generator.py</code></pre>
-    <p>即可完成报告生成与雷达图展示。</p>
-  </div>
-
-</body>
-</html>

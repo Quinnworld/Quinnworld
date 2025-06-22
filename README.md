@@ -102,7 +102,6 @@
 </div>
 
 <script>
-  // 六个维度（中文）
   const geneDimensions = [
     { key: "extraversion", label: "外向性" },
     { key: "emotion_stability", label: "情绪稳定性" },
@@ -112,7 +111,6 @@
     { key: "openness", label: "开放性" }
   ];
 
-  // 12题题库，每题4选项，对应六个维度评分-2~2
   const questionPool = [
     {
       id: "Q1", text: "你喜欢参加社交活动吗？",
@@ -247,44 +245,9 @@
   const radarCanvas = document.getElementById("radarChart");
   const ctx = radarCanvas.getContext("2d");
 
-  // 颜色渐变计算函数（蓝-紫-红）
-  function colorGradient(value) {
-    // value范围 -2到2，映射0~1
-    const t = (value + 2) / 4;
-    // 0 -> 蓝(60,120,240)
-    // 0.5 -> 紫(150,50,150)
-    // 1 -> 红(240,80,80)
-    if (t <= 0.5) {
-      // 蓝->紫渐变
-      const r = 60 + (150 - 60) * (t / 0.5);
-      const g = 120 + (50 - 120) * (t / 0.5);
-      const b = 240 + (150 - 240) * (t / 0.5);
-      return `rgb(${r.toFixed(0)},${g.toFixed(0)},${b.toFixed(0)})`;
-    } else {
-      // 紫->红渐变
-      const r = 150 + (240 - 150) * ((t - 0.5) / 0.5);
-      const g = 50 + (80 - 50) * ((t - 0.5) / 0.5);
-      const b = 150 + (80 - 150) * ((t - 0.5) / 0.5);
-      return `rgb(${r.toFixed(0)},${g.toFixed(0)},${b.toFixed(0)})`;
-    }
-  }
-
-  // 计算每题背景色平均值
+  // 去除背景渐变，固定白色
   function updateBackgroundColor() {
-    if (selectedOptions.length === 0) {
-      document.body.style.backgroundColor = "#fff";
-      return;
-    }
-    // 取当前题目选项对应所有tags数值的平均
-    const tags = questionPool[currentIndex].options[selectedOptions[currentIndex]]?.tags;
-    if (!tags) {
-      document.body.style.backgroundColor = "#fff";
-      return;
-    }
-    // 取tags里所有值平均
-    const values = Object.values(tags);
-    const avg = values.reduce((a,b)=>a+b,0) / values.length;
-    document.body.style.backgroundColor = colorGradient(avg);
+    document.body.style.backgroundColor = "#fff";
   }
 
   function selectOption(idx) {
@@ -293,7 +256,7 @@
       el.classList.toggle("selected", i === idx);
     });
     btnNext.disabled = false;
-    updateBackgroundColor();
+    // 不调用背景色更新，保持白色
   }
 
   function renderQuestion(index) {
@@ -320,7 +283,6 @@
 
   function calculateScores() {
     tagScores = {};
-    // 遍历已选项，累加对应tags
     selectedOptions.forEach((optIdx, qIdx) => {
       if (optIdx === null || optIdx === undefined) return;
       const tags = questionPool[qIdx].options[optIdx].tags;
@@ -328,12 +290,8 @@
         tagScores[k] = (tagScores[k] || 0) + tags[k];
       }
     });
-
-    // 性别因子影响，简单示范：男加0，女加0，其他取男女平均（这里不额外调整分数，实际可根据业务逻辑调整）
-    // 以后可以接入更复杂权重算法
   }
 
-  // 绘制雷达图辅助函数
   function drawRadarChart(scores) {
     const w = radarCanvas.width;
     const h = radarCanvas.height;
@@ -344,7 +302,6 @@
     const dimCount = geneDimensions.length;
     const angleStep = (2 * Math.PI) / dimCount;
 
-    // 画多边形网格（5层）
     ctx.lineWidth = 1;
     ctx.strokeStyle = "rgba(0,0,0,0.2)";
     for (let level = 1; level <= 5; level++) {
@@ -360,7 +317,6 @@
       ctx.stroke();
     }
 
-    // 画轴线及标签
     ctx.fillStyle = "#000";
     ctx.font = "14px 微软雅黑";
     ctx.textAlign = "center";
@@ -368,29 +324,25 @@
     for (let i = 0; i < dimCount; i++) {
       const x = cx + radius * Math.sin(i * angleStep);
       const y = cy - radius * Math.cos(i * angleStep);
-      // 轴线
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.lineTo(x, y);
       ctx.stroke();
 
-      // 标签
       const label = geneDimensions[i].label;
       const labelX = cx + (radius + 25) * Math.sin(i * angleStep);
       const labelY = cy - (radius + 25) * Math.cos(i * angleStep);
       ctx.fillText(label, labelX, labelY);
     }
 
-    // 计算归一化分数 0~100
-    // 假设每维度最大绝对值24（12题，每题最大2分）
+    // 12题最大绝对值24
     const normalizedScores = geneDimensions.map(dim => {
       const raw = scores[dim.key] || 0;
-      let norm = (raw + 24) / 48; // 0~1
+      let norm = (raw + 24) / 48;
       norm = Math.min(1, Math.max(0, norm));
       return norm;
     });
 
-    // 画雷达图区域
     ctx.beginPath();
     for (let i = 0; i < dimCount; i++) {
       const r = normalizedScores[i] * radius;
@@ -400,15 +352,12 @@
       else ctx.lineTo(x, y);
     }
     ctx.closePath();
-    // 填充半透明色
     ctx.fillStyle = "rgba(100, 80, 200, 0.4)";
     ctx.fill();
-    // 边框
     ctx.strokeStyle = "rgba(80, 60, 180, 0.8)";
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // 绘制节点圆点
     for (let i = 0; i < dimCount; i++) {
       const r = normalizedScores[i] * radius;
       const x = cx + r * Math.sin(i * angleStep);
@@ -422,16 +371,13 @@
     }
   }
 
-  // 计算总分（六维度平均），0~100，保留一位小数
   function computeTotalScore(scores) {
     const vals = geneDimensions.map(d => scores[d.key] || 0);
     const avgRaw = vals.reduce((a,b)=>a+b,0) / vals.length;
-    // 同上归一化，0~1
     const norm = (avgRaw + 24) / 48;
     return (norm * 100).toFixed(1);
   }
 
-  // 生成prompt文字，简单示范
   function generatePrompt(scores) {
     let parts = [];
     for (const dim of geneDimensions) {
@@ -443,18 +389,14 @@
     return parts.join("，") + "。";
   }
 
-  // 颜色渐变文字显示
   function setScoreTextColor(total) {
-    // total 0~100 映射红-蓝渐变
     const t = total / 100;
-    // 0红(240,80,80)，1蓝(60,120,240)
     const r = 240 + (60 - 240) * t;
     const g = 80 + (120 - 80) * t;
     const b = 80 + (240 - 80) * t;
     return `rgb(${r.toFixed(0)},${g.toFixed(0)},${b.toFixed(0)})`;
   }
 
-  // 按钮事件
   btnNext.onclick = () => {
     if (selectedOptions[currentIndex] == null) {
       alert("请先选择一个选项！");
@@ -463,7 +405,6 @@
     if (currentIndex < questionPool.length - 1) {
       renderQuestion(currentIndex + 1);
     } else {
-      // 结束，显示结果
       calculateScores();
       renderResult();
     }
@@ -499,7 +440,6 @@
     document.body.style.backgroundColor = "#fff";
   };
 
-  // 显示结果面板
   function renderResult() {
     sectionQuiz.style.display = "none";
     sectionResult.style.display = "block";
@@ -513,7 +453,6 @@
     promptOutput.textContent = generatePrompt(tagScores);
   }
 
-  // 点击prompt复制
   promptOutput.onclick = () => {
     navigator.clipboard.writeText(promptOutput.textContent)
       .then(() => alert("Prompt已复制到剪贴板！"))

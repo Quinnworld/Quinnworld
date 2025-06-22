@@ -1,276 +1,150 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>行为分析测验问卷</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <title>基因—个性报告自动化脚本</title>
   <style>
-    body { font-family: "微软雅黑", sans-serif; padding: 20px; background: #f7f9fc; max-width: 720px; margin: auto; }
-    h1, h2 { text-align: center; color: #222; }
-    form { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 0 12px rgba(0,0,0,0.1); }
-    .question { margin-bottom: 18px; }
-    .question p { font-weight: 600; color: #444; margin-bottom: 6px; }
-    label { display: block; margin-bottom: 6px; cursor: pointer; color: #555; }
-    input[type=radio] { margin-right: 8px; }
-    #radar-container, #report { margin-top: 30px; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 0 12px rgba(0,0,0,0.1); }
-    #total-score { font-size: 1.3em; font-weight: bold; text-align: center; margin-bottom: 12px; color: #007acc; }
-    ul { line-height: 1.6; padding-left: 20px; }
-    li strong { color: #007acc; }
-    #submit-btn { display: block; width: 100%; padding: 12px; font-size: 1.1em; background: #007acc; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
-    #submit-btn:disabled { background: #ccc; cursor: not-allowed; }
-    .payment-btn { display: block; width: 100%; padding: 12px; font-size: 1.1em; background: #ff9900; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; }
-    .payment-btn:disabled { background: #ccc; cursor: not-allowed; }
+    body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; background: #f9f9f9; }
+    h1 { color: #333; }
+    pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 4px; overflow-x: auto; }
+    code { font-family: Consolas, monospace; font-size: 14px; }
+    .section { margin-bottom: 30px; }
   </style>
 </head>
 <body>
 
-<h1>行为分析测验问卷</h1>
+  <h1>基因—个性报告自动化脚本</h1>
 
-<div id="question-container"></div>
-
-<div id="radar-container" style="display:none;">
-  <h2>基因评分雷达图</h2>
-  <canvas id="radarChart"></canvas>
-</div>
-
-<div id="report" style="display:none;">
-  <h2>基础解析报告</h2>
-  <p id="total-score"></p>
-  <p id="summary-text"></p>
-  <h2>深度解析报告</h2>
-  <div id="depth-report-content" style="display:none;">
-    <ul id="detail-list"></ul>
+  <div class="section">
+    <h2>使用说明</h2>
+    <ol>
+      <li>将本文件另存为 <code>report_generator.html</code>（可直接在 GitHub 仓库中查看）。</li>
+      <li>在同级目录新建 <code>requirements.txt</code>，添加以下内容：<br>
+        <code>pandas<br>numpy<br>matplotlib</code>
+      </li>
+      <li>在本地或服务器上运行：<br>
+        <code>pip install -r requirements.txt<br>python report_generator.py</code>
+      </li>
+    </ol>
   </div>
-  <button id="payment-btn" class="payment-btn">解锁深度发展报告（￥10）</button>
-  <p id="payment-status" style="text-align:center; margin-top:10px;"></p>
-</div>
 
-<script>
-// 维度标签与行为分析对应
-const dimensionLabels = {
-  EmotionalStability: '情绪稳定性',
-  Sociability: '社交性',
-  RiskTolerance: '风险偏好',
-  AttentionControl: '注意力控制',
-  Impulsivity: '冲动性',
-  StressResilience: '抗压能力'
-};
+  <div class="section">
+    <h2>完整脚本：report_generator.py</h2>
+    <pre><code>#!/usr/bin/env python3
+"""
+Report Generator: 基因—个性自动化脚本
 
-// 12个问题与得分规则
-const questions = [
-  { q: "当你面对挫折时，你通常会？", options: [
-    { text: "快速调整情绪，积极应对", scores: { EmotionalStability: 8, StressResilience: 7 } },
-    { text: "感到沮丧，但可以逐渐恢复", scores: { EmotionalStability: 4, StressResilience: 5 } },
-    { text: "长时间无法振作，情绪容易波动", scores: { EmotionalStability: 2, StressResilience: 3 } },
-    { text: "寻求他人帮助，暂时逃避", scores: { Sociability: 6, EmotionalStability: 3 } }
-  ] },
-  { q: "在做决定时，你通常？", options: [
-    { text: "仔细思考后做决定", scores: { Impulsivity: 3, AttentionControl: 7 } },
-    { text: "快速做决定，倾向于立即行动", scores: { Impulsivity: 8, AttentionControl: 4 } },
-    { text: "依赖他人的建议和意见", scores: { Sociability: 6, EmotionalStability: 5 } },
-    { text: "反复琢磨，迟迟无法决定", scores: { EmotionalStability: 4, Impulsivity: 2 } }
-  ] },
-  { q: "你喜欢与陌生人交流吗？", options: [
-    { text: "非常喜欢，感到很有趣", scores: { Sociability: 9 } },
-    { text: "偶尔，取决于情境", scores: { Sociability: 5 } },
-    { text: "不太喜欢，感到不自在", scores: { Sociability: 2 } },
-    { text: "我倾向于避免交流", scores: { Sociability: 1 } }
-  ] },
-  { q: "你通常如何应对压力？", options: [
-    { text: "通过锻炼或运动释放压力", scores: { StressResilience: 8, EmotionalStability: 6 } },
-    { text: "倾诉给朋友或家人", scores: { Sociability: 7, StressResilience: 5 } },
-    { text: "沉默不语，独自承担", scores: { EmotionalStability: 5, StressResilience: 4 } },
-    { text: "逃避，避免面对压力源", scores: { StressResilience: 2, EmotionalStability: 3 } }
-  ] },
-  { q: "你通常怎样处理焦虑情绪？", options: [
-    { text: "通过冥想或深呼吸放松自己", scores: { EmotionalStability: 8, StressResilience: 7 } },
-    { text: "找朋友聊一聊，分散注意力", scores: { Sociability: 7, EmotionalStability: 5 } },
-    { text: "坚持自己的方式，继续工作", scores: { Impulsivity: 6, AttentionControl: 6 } },
-    { text: "消极情绪一直缠绕，难以走出困境", scores: { EmotionalStability: 3, StressResilience: 4 } }
-  ] },
-  { q: "你喜欢在团队中担任什么角色？", options: [
-    { text: "领导角色，主导整个团队", scores: { Sociability: 9, Impulsivity: 7 } },
-    { text: "执行者，听从领导安排", scores: { Sociability: 5, AttentionControl: 6 } },
-    { text: "协调者，帮助大家沟通合作", scores: { Sociability: 8, EmotionalStability: 6 } },
-    { text: "独立工作者，不喜欢干扰", scores: { Sociability: 3, StressResilience: 5 } }
-  ] },
-  { q: "你通常如何处理情绪波动？", options: [
-    { text: "通过冥想、运动等方式平复情绪", scores: { EmotionalStability: 8, StressResilience: 7 } },
-    { text: "与朋友交流，寻求安慰", scores: { Sociability: 6, EmotionalStability: 5 } },
-    { text: "自己默默消化，时间过去后会好转", scores: { EmotionalStability: 4, StressResilience: 3 } },
-    { text: "情绪波动大，容易失控", scores: { EmotionalStability: 2, StressResilience: 2 } }
-  ] },
-  { q: "你如何看待挑战性的任务？", options: [
-    { text: "喜欢挑战，乐于迎接新任务", scores: { RiskTolerance: 8, Sociability: 6 } },
-    { text: "有点害怕，但还是会尝试", scores: { RiskTolerance: 5, EmotionalStability: 4 } },
-    { text: "不太喜欢，倾向于避免复杂任务", scores: { RiskTolerance: 3, StressResilience: 3 } },
-    { text: "完全不喜欢，避免任何挑战", scores: { RiskTolerance: 1, EmotionalStability: 2 } }
-  ] },
-  { q: "你对于未来的规划是否清晰？", options: [
-    { text: "非常清晰，已设定明确目标", scores: { AttentionControl: 8, EmotionalStability: 7 } },
-    { text: "有大致方向，但没有明确的计划", scores: { AttentionControl: 5, Sociability: 4 } },
-    { text: "没有具体计划，只是随遇而安", scores: { AttentionControl: 3, Sociability: 5 } },
-    { text: "完全没有计划，甚至感到迷茫", scores: { AttentionControl: 2, EmotionalStability: 3 } }
-  ] },
-  { q: "你如何处理日常中的多任务？", options: [
-    { text: "有效分配时间，处理多个任务", scores: { AttentionControl: 9, Impulsivity: 6 } },
-    { text: "倾向于集中注意力处理一项任务", scores: { AttentionControl: 6, Impulsivity: 3 } },
-    { text: "经常感到时间紧迫，容易感到压力", scores: { StressResilience: 4, Impulsivity: 5 } },
-    { text: "做不到，多任务让我感到不堪重负", scores: { StressResilience: 2, AttentionControl: 3 } }
-  ] },
-  { q: "你怎样看待团队合作中的冲突？", options: [
-    { text: "积极解决冲突，促进合作", scores: { Sociability: 8, StressResilience: 6 } },
-    { text: "避免冲突，尽量和谐相处", scores: { Sociability: 5, EmotionalStability: 4 } },
-    { text: "不喜欢冲突，倾向于退缩", scores: { Sociability: 2, EmotionalStability: 3 } },
-    { text: "不介意冲突，认为这是正常现象", scores: { Sociability: 6, Impulsivity: 7 } }
-  ] },
-  { q: "你是否享受尝试新事物？", options: [
-    { text: "非常享受，喜欢尝试新鲜事物", scores: { RiskTolerance: 9, Sociability: 7 } },
-    { text: "偶尔会，但不太主动", scores: { RiskTolerance: 5, Sociability: 4 } },
-    { text: "不太喜欢，偏向保守", scores: { RiskTolerance: 3, EmotionalStability: 4 } },
-    { text: "完全不喜欢，喜欢稳定生活", scores: { RiskTolerance: 1, EmotionalStability: 3 } }
-  ] },
-  { q: "你如何对待生活中的不确定性？", options: [
-    { text: "喜欢迎接挑战，接受未知", scores: { RiskTolerance: 8, StressResilience: 6 } },
-    { text: "尽量避免不确定性，计划周密", scores: { EmotionalStability: 7, AttentionControl: 6 } },
-    { text: "感到不安，倾向回避", scores: { EmotionalStability: 4, StressResilience: 3 } },
-    { text: "完全回避，讨厌任何不确定性", scores: { EmotionalStability: 2, RiskTolerance: 1 } }
-  ] }
-];
+使用方法：
+1. 在同级目录创建 requirements.txt，内容：
+   pandas
+   numpy
+   matplotlib
+2. 安装依赖并运行：
+   pip install -r requirements.txt
+   python report_generator.py
+"""
 
-// 随机打乱数组
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import os
 
-// 随机打乱问题和选项顺序
-shuffleArray(questions);
-questions.forEach(question => shuffleArray(question.options));
+# ===== 1. 用户信息输入 =====
+def get_user_info():
+    gender = input("请输入您的性别（male/female/other）：").strip().lower()
+    if gender not in ['male', 'female', 'other']:
+        gender = 'other'
+    try:
+        age = int(input("请输入您的年龄：").strip())
+    except:
+        age = 30
+    return gender, age
 
-let userAnswers = [];
-let currentQuestionIndex = 0;
+if __name__ == '__main__':
+    gender, age = get_user_info()
 
-// 渲染问题
-function renderQuestion() {
-  const question = questions[currentQuestionIndex];
-  const container = document.getElementById('question-container');
-  container.innerHTML = `
-    <div class="question">
-      <p><strong>问题 ${currentQuestionIndex + 1}</strong>: ${question.q}</p>
-      ${question.options.map((opt, idx) => `
-        <label>
-          <input type="radio" name="question" value="${idx}" required>
-          ${opt.text}
-        </label>
-      `).join('')}
-      <button id="submit-btn">提交</button>
-    </div>
-  `;
+    # ===== 2. 六大维度及示例原始得分 =====
+    dimensions = [
+        'Extraversion',
+        'Agreeableness',
+        'Conscientiousness',
+        'Neuroticism',
+        'Openness',
+        'Stability'
+    ]
+    # 示例：实际由 PGS + G×G + 概率模型生成
+    initial_scores = np.array([75, 60, 82, 45, 90, 70])
 
-  // 绑定点击事件
-  const submitBtn = document.getElementById('submit-btn');
-  submitBtn.addEventListener('click', handleSubmit);
-}
-
-// 处理提交
-function handleSubmit() {
-  const selectedOption = document.querySelector('input[name="question"]:checked');
-  if (!selectedOption) {
-    alert('请先选择一个选项');
-    return;
-  }
-
-  // 存储用户的选择
-  const selectedIndex = parseInt(selectedOption.value);
-  userAnswers.push(questions[currentQuestionIndex].options[selectedIndex].scores);
-
-  // 判断是否为最后一个问题
-  if (currentQuestionIndex < questions.length - 1) {
-    currentQuestionIndex++;
-    renderQuestion();  // 渲染下一个问题
-  } else {
-    displayResults();  // 显示最终结果
-  }
-}
-
-// 显示结果
-function displayResults() {
-  const totalScores = userAnswers.reduce((acc, scoreObj) => {
-    for (const key in scoreObj) {
-      acc[key] = (acc[key] || 0) + scoreObj[key];
+    # ===== 3. 性别与年龄调整因子 =====
+    gender_factors = {
+        'male':   [1.05, 0.95, 1.00, 1.10, 0.98, 1.00],
+        'female': [0.95, 1.05, 1.02, 0.90, 1.02, 1.00]
     }
-    return acc;
-  }, {});
+    def age_factor(age):
+        # 将年龄映射到 [0.8, 1.2] 区间
+        return max(0.8, min(1.2, 1 + (30 - age) * 0.005))
 
-  const totalScore = Object.values(totalScores).reduce((sum, score) => sum + score, 0) / Object.keys(totalScores).length;
+    def adjust_scores(scores, gender, age):
+        if gender == 'other':
+            m = np.array(gender_factors['male'])
+            f = np.array(gender_factors['female'])
+            factor = (m + f) / 2
+        else:
+            factor = np.array(gender_factors.get(gender, gender_factors['female']))
+        return scores * factor * age_factor(age)
 
-  // 显示雷达图
-  const ctx = document.getElementById('radarChart').getContext('2d');
-  new Chart(ctx, {
-    type: 'radar',
-    data: {
-      labels: Object.values(dimensionLabels),
-      datasets: [{
-        label: '行为评分',
-        data: Object.values(totalScores),
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      scales: {
-        r: { beginAtZero: true, suggestedMin: 0, suggestedMax: 100 }
-      }
-    }
-  });
+    # ===== 4. 得分调整与总分计算 =====
+    adjusted_scores = adjust_scores(initial_scores, gender, age)
+    total_score = round(np.mean(adjusted_scores), 1)
 
-  // 显示报告
-  document.getElementById('radar-container').style.display = 'block';
-  document.getElementById('report').style.display = 'block';
-  document.getElementById('total-score').textContent = `综合总分：${totalScore.toFixed(1)} / 100`;
+    # ===== 5. 绘制雷达图 =====
+    angles = np.linspace(0, 2 * np.pi, len(dimensions), endpoint=False).tolist()
+    values = np.concatenate((adjusted_scores, [adjusted_scores[0]]))
+    angles += angles[:1]
 
-  let summaryText = '';
-  if (totalScore > 70) {
-    summaryText = '整体心理表现良好，具备较强的情绪调节和社交能力，适应环境和压力的能力较强。';
-  } else if (totalScore > 40) {
-    summaryText = '心理表现中等，有一定优势，但部分维度存在提升空间，建议关注情绪和注意力管理。';
-  } else {
-    summaryText = '表现偏低，可能易感情绪波动或注意力不集中，建议加强心理健康和抗压能力。';
-  }
-  document.getElementById('summary-text').textContent = summaryText;
+    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+    ax.plot(angles, values, linewidth=2)
+    ax.fill(angles, values, alpha=0.25)
+    ax.set_thetagrids(np.degrees(angles[:-1]), dimensions)
+    ax.set_ylim(0, 100)
+    ax.set_title('初步基因个性评分雷达图')
+    plt.tight_layout()
+    plt.show()
 
-  const detailsList = Object.keys(totalScores).map(key => {
-    return `<li><strong>${dimensionLabels[key]}</strong>: ${totalScores[key]}</li>`;
-  }).join('');
-  document.getElementById('detail-list').innerHTML = detailsList;
+    # ===== 6. 输出初步报告 =====
+    prelim_df = pd.DataFrame({
+        'Dimension': dimensions,
+        'Adjusted Score': np.round(adjusted_scores, 1)
+    })
+    prelim_df.loc[len(prelim_df)] = ['Total Score', total_score]
+    print("\n=== 初步报告：基因个性评分表 ===")
+    print(prelim_df.to_string(index=False))
 
-  // 解锁深度发展报告
-  if (totalScore > 60) {
-    document.getElementById('payment-btn').disabled = false;
-  }
-}
+    # ===== 7. 深度报告（付费版）生成 =====
+    deep_report_path = "deep_report.pdf"
+    with open(deep_report_path, "wb") as f:
+        # TODO: 用实际深度报告内容替换占位符
+        f.write(b"%PDF-1.4\n% 深度报告内容占位符\n")
+    print(f"\n深度报告已生成（付费下载）：{os.path.abspath(deep_report_path)}")
+    </code></pre>
+  </div>
 
-// 支付解锁深度报告
-document.getElementById('payment-btn').addEventListener('click', function() {
-  // 模拟支付过程
-  const paymentStatus = document.getElementById('payment-status');
-  paymentStatus.textContent = '支付处理中...';
+  <div class="section">
+    <h2>requirements.txt</h2>
+    <pre><code>pandas
+numpy
+matplotlib</code></pre>
+  </div>
 
-  setTimeout(function() {
-    // 假设支付成功
-    paymentStatus.textContent = '支付成功，您已解锁深度发展报告！';
-    document.getElementById('depth-report-content').style.display = 'block';  // 解锁深度报告内容
-  }, 2000);  // 模拟2秒支付过程
-});
-
-// 初始化
-renderQuestion();  // 初次渲染第一个问题
-</script>
+  <div class="section">
+    <h2>部署与运行</h2>
+    <p>
+      克隆此仓库后，将以上两个文件放在同级目录，执行：
+    </p>
+    <pre><code>pip install -r requirements.txt
+python report_generator.py</code></pre>
+    <p>即可完成报告生成与雷达图展示。</p>
+  </div>
 
 </body>
 </html>

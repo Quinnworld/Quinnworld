@@ -32,8 +32,6 @@
     <option value="female">女性</option>
     <option value="other">其他</option>
   </select>
-  <label for="inputRiskIndex">情绪稳定性风险指数（1-10）</label>
-  <input type="number" id="inputRiskIndex" value="5" min="1" max="10" />
   <button id="btnStart">开始答题</button>
 </div>
 
@@ -81,31 +79,31 @@
       { text: "有点紧张", tags: { extraversion: -1 } },
       { text: "比较自然", tags: { extraversion: 1 } },
       { text: "非常外向", tags: { extraversion: 2 } }
-    ], riskThreshold: 5 },
+    ]},
     { id: "Q2", text: "你面对压力时的情绪反应？", options: [
       { text: "非常焦虑", tags: { emotion_stability: -2 } },
       { text: "有些紧张", tags: { emotion_stability: -1 } },
       { text: "情绪稳定", tags: { emotion_stability: 1 } },
       { text: "非常冷静", tags: { emotion_stability: 2 } }
-    ], riskThreshold: 7 },
+    ]},
     { id: "Q3", text: "你喜欢尝试新鲜事物吗？", options: [
       { text: "不喜欢", tags: { novelty_seek: -2 } },
       { text: "偶尔尝试", tags: { novelty_seek: 0 } },
       { text: "喜欢", tags: { novelty_seek: 1 } },
       { text: "非常喜欢", tags: { novelty_seek: 2 } }
-    ], riskThreshold: 3 },
+    ]},
     { id: "Q4", text: "你是否按时完成任务？", options: [
       { text: "经常拖延", tags: { responsibility: -2 } },
       { text: "偶尔拖延", tags: { responsibility: -1 } },
       { text: "大部分时间按时", tags: { responsibility: 1 } },
       { text: "总是按时", tags: { responsibility: 2 } }
-    ], riskThreshold: 5 },
+    ]},
     { id: "Q5", text: "你控制冲动的能力如何？", options: [
       { text: "很差", tags: { self_control: -2 } },
       { text: "一般", tags: { self_control: -1 } },
       { text: "较好", tags: { self_control: 1 } },
       { text: "非常好", tags: { self_control: 2 } }
-    ], riskThreshold: 6 }
+    ]}
   ];
 
   const geneDimensions = [
@@ -119,7 +117,6 @@
   let currentIndex = 0;
   let selectedOptions = [];
   let tagScores = {};
-  let riskIndex = 5;
   let userHasPaid = false;
 
   const sectionUserInfo = document.getElementById("sectionUserInfo");
@@ -137,10 +134,6 @@
   const totalScoreText = document.getElementById("totalScoreText");
   const paySection = document.getElementById("paySection");
   const btnPaidConfirm = document.getElementById("btnPaidConfirm");
-
-  function filterQuestionsByRisk(risk) {
-    return fullQuestionPool.filter(q => risk >= q.riskThreshold);
-  }
 
   let questionPool = [];
   let shuffledOptionsList = [];
@@ -260,16 +253,10 @@
   btnStart.onclick = () => {
     const age = parseInt(document.getElementById("inputAge").value);
     if(isNaN(age) || age < 0) { alert("请输入有效年龄"); return; }
-    riskIndex = parseInt(document.getElementById("inputRiskIndex").value);
-    if(isNaN(riskIndex) || riskIndex < 1 || riskIndex > 10) { alert("请输入1-10的风险指数"); return; }
     selectedOptions = new Array();
     tagScores = {};
-    questionPool = shuffle(filterQuestionsByRisk(riskIndex).map(q => ({...q})));
+    questionPool = shuffle(fullQuestionPool.map(q => ({...q})));
     shuffledOptionsList = [];
-    if(questionPool.length === 0) {
-      alert("根据风险指数，暂无匹配题目。");
-      return;
-    }
     currentIndex = 0;
     sectionUserInfo.style.display = "none";
     sectionQuiz.style.display = "block";

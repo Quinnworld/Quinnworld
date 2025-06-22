@@ -3,16 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>因•趣问答完整版（专业深度解析）</title>
+<title>心理测评系统示范</title>
 <style>
   body {
     max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif;
     background: #fff; padding: 20px; color:#000;
-    transition: background-color 0.8s ease;
   }
-  h2, h3 {
-    text-align: center;
-  }
+  h2, h3 { text-align: center; }
   label, select, input[type=number] {
     width: 100%; margin: 10px 0 15px; font-size: 16px;
   }
@@ -52,30 +49,19 @@
   #totalScoreText {
     text-align: center; font-weight: bold; margin: 10px 0;
     font-size: 20px;
-    transition: color 0.5s ease;
-  }
-  canvas {
-    display: block;
-    margin: 0 auto 20px;
-    max-width: 100%;
-    background: white;
   }
   #progressText {
     font-size: 14px; color: #555; text-align: center; margin-top: 5px;
-  }
-  #btnsContainer {
-    text-align: center;
-    margin-top: 10px;
   }
 </style>
 </head>
 <body>
 
-<h2>趣问答 & 因得分完整版（专业深度解析）</h2>
+<h2>心理测评系统示范</h2>
 
 <div id="sectionUserInfo">
-  <label for="inputAge">年龄（不限）</label>
-  <input type="number" id="inputAge" min="0" value="25" />
+  <label for="inputAge">年龄</label>
+  <input type="number" id="inputAge" value="25" min="0" />
   <label for="selectGender">性别</label>
   <select id="selectGender">
     <option value="male">男性</option>
@@ -86,26 +72,19 @@
 </div>
 
 <div id="sectionQuiz" style="display:none;">
-  <div id="questionText" class="question" style="font-weight:700; margin-bottom:10px;"></div>
+  <div id="questionText" style="font-weight:700; margin-bottom:10px;"></div>
   <div id="optionsContainer"></div>
-  <div id="btnsContainer">
-    <button id="btnPrev" disabled>上一题</button>
-    <button id="btnNext" disabled>下一题</button>
-  </div>
+  <button id="btnPrev" disabled>上一题</button>
+  <button id="btnNext" disabled>下一题</button>
   <div id="progressText"></div>
 </div>
 
 <div id="sectionResult" style="display:none;">
-  <h3>雷达图因子维度评分</h3>
-  <canvas id="radarChart" width="400" height="400"></canvas>
   <div id="totalScoreText"></div>
-
-  <h3>初步版个性解析（免费）</h3>
+  <h3>基础解析（免费）</h3>
   <pre id="basicAnalysis"></pre>
-
-  <h3>深度版个性解析（付费解锁）</h3>
-  <pre id="premiumAnalysis" title="点击购买深度解析服务">点击购买深度解析服务</pre>
-
+  <h3>深度解析（付费）</h3>
+  <pre id="premiumAnalysis" title="点击生成深度解析">点击生成深度解析</pre>
   <button id="btnRestart">重新开始</button>
 </div>
 
@@ -194,11 +173,12 @@
     ]}
   ];
 
-  let tagScores = {};
   let currentIndex = 0;
-  let selectedOptions = [];
+  let selectedOptions = new Array(questionPool.length).fill(null);
+  let tagScores = {};
   let age = 25;
   let gender = "male";
+  let userHasPaid = false; // 模拟付费状态
 
   const sectionUserInfo = document.getElementById("sectionUserInfo");
   const sectionQuiz = document.getElementById("sectionQuiz");
@@ -215,10 +195,7 @@
   const inputAge = document.getElementById("inputAge");
   const selectGender = document.getElementById("selectGender");
   const totalScoreText = document.getElementById("totalScoreText");
-  const radarCanvas = document.getElementById("radarChart");
-  const ctx = radarCanvas.getContext("2d");
 
-  // 固定白色背景，去掉渐变
   function updateBackgroundColor() {
     document.body.style.backgroundColor = "#fff";
   }
@@ -236,7 +213,6 @@
     const q = questionPool[index];
     qTextEl.textContent = q.text;
     optionsEl.innerHTML = "";
-    selectedOptions[index] = selectedOptions[index] ?? null;
     btnNext.disabled = selectedOptions[index] === null;
     btnPrev.disabled = index === 0;
     for (let i = 0; i < q.options.length; i++) {
@@ -244,9 +220,7 @@
       opt.className = "option";
       opt.textContent = q.options[i].text;
       opt.onclick = () => selectOption(i);
-      if (selectedOptions[index] === i) {
-        opt.classList.add("selected");
-      }
+      if (selectedOptions[index] === i) opt.classList.add("selected");
       optionsEl.appendChild(opt);
     }
     progressText.textContent = `第 ${index + 1} / ${questionPool.length} 题`;
@@ -256,91 +230,10 @@
   function calculateScores() {
     tagScores = {};
     selectedOptions.forEach((optIdx, qIdx) => {
-      if (optIdx === null || optIdx === undefined) return;
+      if (optIdx == null) return;
       const tags = questionPool[qIdx].options[optIdx].tags;
-      for (const k in tags) {
-        tagScores[k] = (tagScores[k] || 0) + tags[k];
-      }
+      for (const k in tags) tagScores[k] = (tagScores[k] || 0) + tags[k];
     });
-  }
-
-  function drawRadarChart(scores) {
-    const w = radarCanvas.width;
-    const h = radarCanvas.height;
-    ctx.clearRect(0, 0, w, h);
-    const cx = w / 2;
-    const cy = h / 2;
-    const radius = Math.min(cx, cy) * 0.75;
-    const dimCount = geneDimensions.length;
-    const angleStep = (2 * Math.PI) / dimCount;
-
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(0,0,0,0.2)";
-    for (let level = 1; level <= 5; level++) {
-      ctx.beginPath();
-      for (let i = 0; i < dimCount; i++) {
-        const r = (radius * level) / 5;
-        const x = cx + r * Math.sin(i * angleStep);
-        const y = cy - r * Math.cos(i * angleStep);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.closePath();
-      ctx.stroke();
-    }
-
-    ctx.fillStyle = "#000";
-    ctx.font = "14px 微软雅黑";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    for (let i = 0; i < dimCount; i++) {
-      const x = cx + radius * Math.sin(i * angleStep);
-      const y = cy - radius * Math.cos(i * angleStep);
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-
-      const label = geneDimensions[i].label;
-      const labelX = cx + (radius + 25) * Math.sin(i * angleStep);
-      const labelY = cy - (radius + 25) * Math.cos(i * angleStep);
-      ctx.fillText(label, labelX, labelY);
-    }
-
-    // 12题最大绝对值24
-    const normalizedScores = geneDimensions.map(dim => {
-      const raw = scores[dim.key] || 0;
-      let norm = (raw + 24) / 48;
-      norm = Math.min(1, Math.max(0, norm));
-      return norm;
-    });
-
-    ctx.beginPath();
-    for (let i = 0; i < dimCount; i++) {
-      const r = normalizedScores[i] * radius;
-      const x = cx + r * Math.sin(i * angleStep);
-      const y = cy - r * Math.cos(i * angleStep);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.fillStyle = "rgba(100, 80, 200, 0.4)";
-    ctx.fill();
-    ctx.strokeStyle = "rgba(80, 60, 180, 0.8)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    for (let i = 0; i < dimCount; i++) {
-      const r = normalizedScores[i] * radius;
-      const x = cx + r * Math.sin(i * angleStep);
-      const y = cy - r * Math.cos(i * angleStep);
-      ctx.beginPath();
-      ctx.arc(x, y, 6, 0, Math.PI * 2);
-      ctx.fillStyle = "rgb(100, 60, 220)";
-      ctx.fill();
-      ctx.strokeStyle = "#444";
-      ctx.stroke();
-    }
   }
 
   function computeTotalScore(scores) {
@@ -351,45 +244,85 @@
   }
 
   function generateBasicAnalysis(scores) {
-    let parts = [];
-    for (const dim of geneDimensions) {
-      const v = scores[dim.key] || 0;
-      if (v >= 4) parts.push(`${dim.label}较高`);
-      else if (v <= -4) parts.push(`${dim.label}较低`);
+    const parts = [];
+    const { extraversion=0, emotion_stability=0, novelty_seek=0, responsibility=0, self_control=0, openness=0 } = scores;
+
+    if (extraversion >= 4) parts.push("你性格外向，善于交流，喜欢社交。");
+    else if (extraversion <= -4) parts.push("你较为内向，喜欢独处。");
+    else parts.push("你的外向性适中，灵活适应社交环境。");
+
+    if (emotion_stability >= 4) parts.push("情绪稳定，能有效应对压力。");
+    else if (emotion_stability <= -4) parts.push("情绪波动较大，建议学习情绪调节。");
+    else parts.push("情绪较为平稳，能较好管理压力。");
+
+    if (novelty_seek >= 4) parts.push("喜欢探索新事物，富有好奇心。");
+    else if (novelty_seek <= -4) parts.push("偏好稳定环境，较少寻求新体验。");
+    else parts.push("对新事物持开放态度。");
+
+    if (responsibility >= 4) parts.push("责任感强，做事有条理。");
+    else if (responsibility <= -4) parts.push("有时拖延，建议加强时间管理。");
+    else parts.push("责任感适中，能平衡自由与约束。");
+
+    if (self_control >= 4) parts.push("自控力强，善于控制冲动。");
+    else if (self_control <= -4) parts.push("较易冲动，建议培养耐心。");
+    else parts.push("自控力适中，较理智。");
+
+    if (openness >= 4) parts.push("思想开放，乐于接受新观点。");
+    else if (openness <= -4) parts.push("较为保守，喜欢传统。");
+    else parts.push("开放性适中，兼顾传统与创新。");
+
+    return parts.join("\n");
+  }
+
+  async function requestPremiumAnalysis() {
+    premiumAnalysisEl.textContent = "生成中，请稍候...";
+    try {
+      const resp = await fetch('/api/generateAnalysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scores: tagScores, age, gender })
+      });
+      const data = await resp.json();
+      premiumAnalysisEl.textContent = data.analysisText;
+    } catch {
+      premiumAnalysisEl.textContent = "生成失败，请稍后重试。";
     }
-    if (parts.length === 0) return "你的个性较为均衡，性格稳定，适应力强。";
-    return parts.join("，") + "。";
   }
 
-  function generatePremiumAnalysis(scores) {
-    return `深度解析报告（基于最新心理与基因科学研究）：
+  premiumAnalysisEl.onclick = () => {
+    if (!userHasPaid) {
+      alert("请先购买深度解析服务。");
+      return;
+    }
+    requestPremiumAnalysis();
+  };
 
-- 外向性较高的人通常表现出更强的社交能力和积极情绪，这与大脑中调控奖赏和社交行为的神经机制密切相关。研究显示，这类个体在面对社交环境时，神经活动更为活跃，能够更好地适应复杂的人际互动。
+  btnStart.onclick = () => {
+    age = parseInt(inputAge.value);
+    if (isNaN(age) || age < 0) {
+      alert("请输入有效年龄");
+      return;
+    }
+    gender = selectGender.value;
+    selectedOptions = new Array(questionPool.length).fill(null);
+    tagScores = {};
+    currentIndex = 0;
+    sectionUserInfo.style.display = "none";
+    sectionQuiz.style.display = "block";
+    sectionResult.style.display = "none";
+    renderQuestion(currentIndex);
+  };
 
-- 情绪稳定性反映了个体在面对压力和负面情绪时的调节能力。最新研究表明，情绪稳定性较高的人拥有更有效的神经调控网络，能够迅速恢复情绪平衡，减少焦虑和抑郁的风险。
-
-- 新奇寻求倾向于探索未知和接受新体验，这种特质与大脑中处理奖励和风险评估的区域功能增强相关。高新奇寻求者更容易产生创造力和适应环境变化的能力，但也需注意冲动行为的管理。
-
-- 责任感体现了个体的自我约束和计划执行能力。科学研究发现，责任感强的人在执行功能相关脑区表现出更高的活跃度，能够更好地管理时间和资源，完成目标任务。
-
-- 自控力是调节冲动和情绪的重要能力。具备较强自控力的个体，神经系统在冲动抑制和情绪调节方面表现出更高效的运作，这有助于维护心理健康和促进长期目标的达成。
-
-- 开放性反映了个体对新观点和多样文化的接受程度。高开放性的人通常具有更灵活的认知结构和更丰富的想象力，这种特质有助于学习和创新，推动个人成长。
-
-本报告基于最新的神经科学和行为遗传学研究，为你提供科学且深入的个性理解，助力你更好地认识自我，提升生活和工作的质量。欲获取更详细的个性发展建议和定制化指导，请购买完整深度解析服务。`;
-  }
-
-  function setScoreTextColor(total) {
-    const t = total / 100;
-    const r = 240 + (60 - 240) * t;
-    const g = 80 + (120 - 80) * t;
-    const b = 80 + (240 - 80) * t;
-    return `rgb(${r.toFixed(0)},${g.toFixed(0)},${b.toFixed(0)})`;
-  }
+  btnRestart.onclick = () => {
+    sectionUserInfo.style.display = "block";
+    sectionQuiz.style.display = "none";
+    sectionResult.style.display = "none";
+    userHasPaid = false; // 重置付费状态，实际可根据登录状态
+  };
 
   btnNext.onclick = () => {
     if (selectedOptions[currentIndex] == null) {
-      alert("请先选择一个选项！");
+      alert("请选择一个选项");
       return;
     }
     if (currentIndex < questionPool.length - 1) {
@@ -401,56 +334,39 @@
   };
 
   btnPrev.onclick = () => {
-    if (currentIndex > 0) {
-      renderQuestion(currentIndex - 1);
-    }
-  };
-
-  btnStart.onclick = () => {
-    age = parseInt(inputAge.value);
-    if (isNaN(age) || age < 0) {
-      alert("请输入有效的年龄！");
-      return;
-    }
-    gender = selectGender.value;
-    selectedOptions = new Array(questionPool.length).fill(null);
-    tagScores = {};
-    currentIndex = 0;
-    sectionUserInfo.style.display = "none";
-    sectionQuiz.style.display = "block";
-    sectionResult.style.display = "none";
-    document.body.style.backgroundColor = "#fff";
-    renderQuestion(currentIndex);
-  };
-
-  btnRestart.onclick = () => {
-    sectionUserInfo.style.display = "block";
-    sectionQuiz.style.display = "none";
-    sectionResult.style.display = "none";
-    document.body.style.backgroundColor = "#fff";
+    if (currentIndex > 0) renderQuestion(currentIndex - 1);
   };
 
   function renderResult() {
     sectionQuiz.style.display = "none";
     sectionResult.style.display = "block";
 
-    drawRadarChart(tagScores);
-
     const total = computeTotalScore(tagScores);
     totalScoreText.textContent = `综合因子得分：${total}分`;
-    totalScoreText.style.color = setScoreTextColor(total);
+    totalScoreText.style.color = `rgb(${240 - 180 * total / 100},${80 + 40 * total / 100},${80 + 160 * total / 100})`;
 
     basicAnalysisEl.textContent = generateBasicAnalysis(tagScores);
-
-    premiumAnalysisEl.textContent = "点击购买深度解析服务";
-    premiumAnalysisEl.style.color = "#888";
-    premiumAnalysisEl.style.cursor = "pointer";
-    premiumAnalysisEl.onclick = () => {
-      alert("付费功能暂未开通，敬请期待！");
-      // 可接入支付流程
-    };
+    premiumAnalysisEl.textContent = "点击生成深度解析";
   }
 
+  function renderQuestion(index) {
+    currentIndex = index;
+    const q = questionPool[index];
+    qTextEl.textContent = q.text;
+    optionsEl.innerHTML = "";
+    btnNext.disabled = selectedOptions[index] === null;
+    btnPrev.disabled = index === 0;
+    for (let i = 0; i < q.options.length; i++) {
+      const opt = document.createElement("div");
+      opt.className = "option";
+      opt.textContent = q.options[i].text;
+      opt.onclick = () => selectOption(i);
+      if (selectedOptions[index] === i) opt.classList.add("selected");
+      optionsEl.appendChild(opt);
+    }
+    progressText.textContent = `第 ${index + 1} / ${questionPool.length} 题`;
+    updateBackgroundColor();
+  }
 </script>
 
 </body>

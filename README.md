@@ -112,6 +112,30 @@ const questions = [
     { text: "有大致方向，但没有明确的计划", scores: { AttentionControl: 5, Sociability: 4 } },
     { text: "没有具体计划，只是随遇而安", scores: { AttentionControl: 3, Sociability: 5 } },
     { text: "完全没有计划，甚至感到迷茫", scores: { AttentionControl: 2, EmotionalStability: 3 } }
+  ] },
+  { q: "你如何处理日常中的多任务？", options: [
+    { text: "有效分配时间，处理多个任务", scores: { AttentionControl: 9, Impulsivity: 6 } },
+    { text: "倾向于集中注意力处理一项任务", scores: { AttentionControl: 6, Impulsivity: 3 } },
+    { text: "经常感到时间紧迫，容易感到压力", scores: { StressResilience: 4, Impulsivity: 5 } },
+    { text: "做不到，多任务让我感到不堪重负", scores: { StressResilience: 2, AttentionControl: 3 } }
+  ] },
+  { q: "你怎样看待团队合作中的冲突？", options: [
+    { text: "积极解决冲突，促进合作", scores: { Sociability: 8, StressResilience: 6 } },
+    { text: "避免冲突，尽量和谐相处", scores: { Sociability: 5, EmotionalStability: 4 } },
+    { text: "不喜欢冲突，倾向于退缩", scores: { Sociability: 2, EmotionalStability: 3 } },
+    { text: "不介意冲突，认为这是正常现象", scores: { Sociability: 6, Impulsivity: 7 } }
+  ] },
+  { q: "你是否享受尝试新事物？", options: [
+    { text: "非常享受，喜欢尝试新鲜事物", scores: { RiskTolerance: 9, Sociability: 7 } },
+    { text: "偶尔会，但不太主动", scores: { RiskTolerance: 5, Sociability: 4 } },
+    { text: "不太喜欢，偏向保守", scores: { RiskTolerance: 3, EmotionalStability: 4 } },
+    { text: "完全不喜欢，喜欢稳定生活", scores: { RiskTolerance: 1, EmotionalStability: 3 } }
+  ] },
+  { q: "你如何对待生活中的不确定性？", options: [
+    { text: "喜欢迎接挑战，接受未知", scores: { RiskTolerance: 8, StressResilience: 6 } },
+    { text: "尽量避免不确定性，计划周密", scores: { EmotionalStability: 7, AttentionControl: 6 } },
+    { text: "感到不安，倾向回避", scores: { EmotionalStability: 4, StressResilience: 3 } },
+    { text: "完全回避，讨厌任何不确定性", scores: { EmotionalStability: 2, RiskTolerance: 1 } }
   ] }
 ];
 

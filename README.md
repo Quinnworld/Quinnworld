@@ -82,6 +82,12 @@
     max-width: 100%;
     margin-top: 20px;
   }
+  #totalScore {
+    font-weight: 700;
+    font-size: 18px;
+    margin-top: 10px;
+    text-align: center;
+  }
   #progressText {
     margin-top: 12px;
     font-size: 14px;
@@ -114,6 +120,7 @@
 
 <div id="sectionResult" class="section" style="display:none;">
   <canvas id="radarChart" width="400" height="400"></canvas>
+  <div id="totalScore">总分：<span id="scoreValue"></span></div>
   <h3>Generated Anime-style Prompt:</h3>
   <pre id="promptOutput" readonly></pre>
   <button id="btnRestart">重新开始</button>
@@ -121,125 +128,124 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // 基因维度，6个维度
+  // 中文维度
   const geneDimensions = [
-    "Cognitive Ability",
-    "Physical Strength",
-    "Emotional Stability",
-    "Novelty Seeking",
-    "Conscientiousness",
-    "Social Agreeableness"
+    "认知能力",
+    "体力",
+    "情绪稳定",
+    "新奇寻求",
+    "尽责性",
+    "社交亲和"
   ];
 
-  // 12题题库，4选项，每选项关联维度分数（-2到2）
+  // 题库和之前一致
   const questions = [
     {
       text: "你觉得自己学习和理解新事物的能力如何？",
       options: [
-        { text: "很差", scores: { "Cognitive Ability": -2 } },
-        { text: "一般", scores: { "Cognitive Ability": -1 } },
-        { text: "较好", scores: { "Cognitive Ability": 1 } },
-        { text: "非常好", scores: { "Cognitive Ability": 2 } }
+        { text: "很差", scores: { "认知能力": -2 } },
+        { text: "一般", scores: { "认知能力": -1 } },
+        { text: "较好", scores: { "认知能力": 1 } },
+        { text: "非常好", scores: { "认知能力": 2 } }
       ]
     },
     {
       text: "你在体育运动或体力活动中表现如何？",
       options: [
-        { text: "很差", scores: { "Physical Strength": -2 } },
-        { text: "一般", scores: { "Physical Strength": -1 } },
-        { text: "较好", scores: { "Physical Strength": 1 } },
-        { text: "非常好", scores: { "Physical Strength": 2 } }
+        { text: "很差", scores: { "体力": -2 } },
+        { text: "一般", scores: { "体力": -1 } },
+        { text: "较好", scores: { "体力": 1 } },
+        { text: "非常好", scores: { "体力": 2 } }
       ]
     },
     {
       text: "面对压力和挑战时，你的情绪稳定性如何？",
       options: [
-        { text: "很差，容易情绪波动", scores: { "Emotional Stability": -2 } },
-        { text: "一般", scores: { "Emotional Stability": -1 } },
-        { text: "较稳定", scores: { "Emotional Stability": 1 } },
-        { text: "非常稳定", scores: { "Emotional Stability": 2 } }
+        { text: "很差，容易情绪波动", scores: { "情绪稳定": -2 } },
+        { text: "一般", scores: { "情绪稳定": -1 } },
+        { text: "较稳定", scores: { "情绪稳定": 1 } },
+        { text: "非常稳定", scores: { "情绪稳定": 2 } }
       ]
     },
     {
       text: "你喜欢尝试新鲜和刺激的事情吗？",
       options: [
-        { text: "不喜欢", scores: { "Novelty Seeking": -2 } },
-        { text: "偶尔喜欢", scores: { "Novelty Seeking": -1 } },
-        { text: "比较喜欢", scores: { "Novelty Seeking": 1 } },
-        { text: "非常喜欢", scores: { "Novelty Seeking": 2 } }
+        { text: "不喜欢", scores: { "新奇寻求": -2 } },
+        { text: "偶尔喜欢", scores: { "新奇寻求": -1 } },
+        { text: "比较喜欢", scores: { "新奇寻求": 1 } },
+        { text: "非常喜欢", scores: { "新奇寻求": 2 } }
       ]
     },
     {
       text: "你做事情是否有计划性和条理？",
       options: [
-        { text: "很差", scores: { "Conscientiousness": -2 } },
-        { text: "一般", scores: { "Conscientiousness": -1 } },
-        { text: "较好", scores: { "Conscientiousness": 1 } },
-        { text: "非常好", scores: { "Conscientiousness": 2 } }
+        { text: "很差", scores: { "尽责性": -2 } },
+        { text: "一般", scores: { "尽责性": -1 } },
+        { text: "较好", scores: { "尽责性": 1 } },
+        { text: "非常好", scores: { "尽责性": 2 } }
       ]
     },
     {
       text: "你与他人相处时的友好和合作程度？",
       options: [
-        { text: "不友好", scores: { "Social Agreeableness": -2 } },
-        { text: "一般", scores: { "Social Agreeableness": -1 } },
-        { text: "较友好", scores: { "Social Agreeableness": 1 } },
-        { text: "非常友好", scores: { "Social Agreeableness": 2 } }
+        { text: "不友好", scores: { "社交亲和": -2 } },
+        { text: "一般", scores: { "社交亲和": -1 } },
+        { text: "较友好", scores: { "社交亲和": 1 } },
+        { text: "非常友好", scores: { "社交亲和": 2 } }
       ]
     },
-    // 7-12题内容和前6题相似，强化各维度综合评分
     {
       text: "你学习新技能的速度如何？",
       options: [
-        { text: "很慢", scores: { "Cognitive Ability": -2 } },
-        { text: "一般", scores: { "Cognitive Ability": -1 } },
-        { text: "较快", scores: { "Cognitive Ability": 1 } },
-        { text: "非常快", scores: { "Cognitive Ability": 2 } }
+        { text: "很慢", scores: { "认知能力": -2 } },
+        { text: "一般", scores: { "认知能力": -1 } },
+        { text: "较快", scores: { "认知能力": 1 } },
+        { text: "非常快", scores: { "认知能力": 2 } }
       ]
     },
     {
       text: "你平时的身体耐力如何？",
       options: [
-        { text: "很差", scores: { "Physical Strength": -2 } },
-        { text: "一般", scores: { "Physical Strength": -1 } },
-        { text: "较好", scores: { "Physical Strength": 1 } },
-        { text: "非常好", scores: { "Physical Strength": 2 } }
+        { text: "很差", scores: { "体力": -2 } },
+        { text: "一般", scores: { "体力": -1 } },
+        { text: "较好", scores: { "体力": 1 } },
+        { text: "非常好", scores: { "体力": 2 } }
       ]
     },
     {
       text: "你处理情绪问题的能力？",
       options: [
-        { text: "很差", scores: { "Emotional Stability": -2 } },
-        { text: "一般", scores: { "Emotional Stability": -1 } },
-        { text: "较好", scores: { "Emotional Stability": 1 } },
-        { text: "非常好", scores: { "Emotional Stability": 2 } }
+        { text: "很差", scores: { "情绪稳定": -2 } },
+        { text: "一般", scores: { "情绪稳定": -1 } },
+        { text: "较好", scores: { "情绪稳定": 1 } },
+        { text: "非常好", scores: { "情绪稳定": 2 } }
       ]
     },
     {
       text: "面对新环境，你适应的速度？",
       options: [
-        { text: "很慢", scores: { "Novelty Seeking": -2 } },
-        { text: "一般", scores: { "Novelty Seeking": -1 } },
-        { text: "较快", scores: { "Novelty Seeking": 1 } },
-        { text: "非常快", scores: { "Novelty Seeking": 2 } }
+        { text: "很慢", scores: { "新奇寻求": -2 } },
+        { text: "一般", scores: { "新奇寻求": -1 } },
+        { text: "较快", scores: { "新奇寻求": 1 } },
+        { text: "非常快", scores: { "新奇寻求": 2 } }
       ]
     },
     {
       text: "你对细节的关注程度？",
       options: [
-        { text: "很差", scores: { "Conscientiousness": -2 } },
-        { text: "一般", scores: { "Conscientiousness": -1 } },
-        { text: "较好", scores: { "Conscientiousness": 1 } },
-        { text: "非常好", scores: { "Conscientiousness": 2 } }
+        { text: "很差", scores: { "尽责性": -2 } },
+        { text: "一般", scores: { "尽责性": -1 } },
+        { text: "较好", scores: { "尽责性": 1 } },
+        { text: "非常好", scores: { "尽责性": 2 } }
       ]
     },
     {
       text: "你对团队合作的投入？",
       options: [
-        { text: "很少", scores: { "Social Agreeableness": -2 } },
-        { text: "一般", scores: { "Social Agreeableness": -1 } },
-        { text: "较多", scores: { "Social Agreeableness": 1 } },
-        { text: "非常多", scores: { "Social Agreeableness": 2 } }
+        { text: "很少", scores: { "社交亲和": -2 } },
+        { text: "一般", scores: { "社交亲和": -1 } },
+        { text: "较多", scores: { "社交亲和": 1 } },
+        { text: "非常多", scores: { "社交亲和": 2 } }
       ]
     }
   ];
@@ -248,23 +254,21 @@
   let age = null;
   let gender = null;
   let currentQuestionIndex = 0;
-  let scores = {}; // 维度分数累加
-
+  let scores = {};
   const sectionUserInfo = document.getElementById("sectionUserInfo");
   const sectionQuiz = document.getElementById("sectionQuiz");
   const sectionResult = document.getElementById("sectionResult");
-
   const inputAge = document.getElementById("inputAge");
   const selectGender = document.getElementById("selectGender");
   const btnStart = document.getElementById("btnStart");
-
   const questionText = document.getElementById("questionText");
   const optionsContainer = document.getElementById("optionsContainer");
   const btnNext = document.getElementById("btnNext");
   const progressText = document.getElementById("progressText");
-
   const promptOutput = document.getElementById("promptOutput");
   const btnRestart = document.getElementById("btnRestart");
+  const radarCanvas = document.getElementById("radarChart");
+  const totalScoreText = document.getElementById("scoreValue");
 
   let selectedOptionIndex = -1;
   let radarChart = null;
@@ -275,7 +279,7 @@
       alert("请输入有效年龄");
       return;
     }
-    age = val;
+    age = Number(val);
     gender = selectGender.value;
     currentQuestionIndex = 0;
     selectedOptionIndex = -1;
@@ -299,7 +303,6 @@
 
   btnNext.onclick = () => {
     if(selectedOptionIndex < 0) return;
-    // 累加当前选项分数
     const currentQuestion = questions[currentQuestionIndex];
     const selectedScores = currentQuestion.options[selectedOptionIndex].scores;
     for (const dim in selectedScores) {
@@ -338,92 +341,33 @@
     progressText.textContent = `题目 ${currentQuestionIndex+1} / ${questions.length}`;
   }
 
-  function showResult(){
-    // 计算满分 2 * 12题 / 6维度 => 每维最大理论分 4题 * 2分 = 8，最小-8，归一化到0-100
-    const dimensionScoresNormalized = geneDimensions.map(dim => {
-      const raw = scores[dim];
-      const norm = (raw + 8) / 16 * 100; // -8~8 映射到0~100
-      return Math.round(norm);
-    });
+  function getColorByGeneType(age, gender){
+    // 简单示例：年龄小于30蓝色，30-50绿色，大于50红色；男性加深颜色，女性淡色
+    let baseColor;
+    if(age < 30) baseColor = [67, 56, 202];      // 蓝色
+    else if(age <= 50) baseColor = [34, 139, 34]; // 绿色
+    else baseColor = [178, 34, 34];               // 红色
 
-    // 绘制雷达图
-    if(radarChart){
-      radarChart.destroy();
+    if(gender === "female"){
+      // 女性颜色淡化
+      baseColor = baseColor.map(c => Math.min(255, Math.floor(c + (255 - c) * 0.5)));
     }
-    const ctx = document.getElementById("radarChart").getContext("2d");
-    radarChart = new Chart(ctx, {
-      type: 'radar',
-      data: {
-        labels: geneDimensions,
-        datasets: [{
-          label: '基因维度得分',
-          data: dimensionScoresNormalized,
-          fill: true,
-          backgroundColor: 'rgba(67, 56, 202, 0.3)',
-          borderColor: 'rgba(67, 56, 202, 0.9)',
-          pointBackgroundColor: 'rgba(67, 56, 202, 1)'
-        }]
-      },
-      options: {
-        scales: {
-          r: {
-            min: 0,
-            max: 100,
-            ticks: { stepSize: 20, color: '#555' },
-            grid: { color: '#ccc' },
-            pointLabels: { color: '#222', font: { size: 14 } }
-          }
-        },
-        plugins: {
-          legend: { labels: { color: '#222', font: { size: 14, weight: 'bold' } } }
-        }
-      }
-    });
-
-    // 生成英文prompt（不可翻动）
-    // 只描述维度和得分，格式固定
-    let prompt = `Anime-style portrait of a character with the following genetic traits scores (0-100):\n`;
-    geneDimensions.forEach((dim,i)=>{
-      prompt += `${dim}: ${dimensionScoresNormalized[i]}\n`;
-    });
-    prompt += `Age: ${age}\nGender: ${gender === "male" ? "Male" : "Female"}`;
-
-    promptOutput.textContent = prompt;
+    return `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, 0.7)`;
   }
-</script>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>基因科学问卷 + 雷达图 + 动漫Prompt生成</title>
-<style>
-  /* 省略样式，保持和之前一致 */
-</style>
-</head>
-<body>
-
-<!-- 页面结构和之前一样 -->
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  // geneDimensions, questions, 状态变量等均与之前相同
-
-  // ... 省略初始化和事件绑定 ...
 
   function showResult(){
     // 归一化分数 -8 ~ 8 映射0-100
     const dimensionScoresNormalized = geneDimensions.map(dim => {
       const raw = scores[dim];
-      return (raw + 8) / 16 * 100;
+      return Math.round((raw + 8) / 16 * 100);
     });
 
-    // 总分 = 六个维度平均得分，保留1位小数
-    const totalScoreRaw = dimensionScoresNormalized.reduce((a,b) => a + b, 0) / dimensionScoresNormalized.length;
-    const totalScore = totalScoreRaw.toFixed(1);
+    // 计算总分（每题满分2分*12题=24分最大，归一化为600分制）
+    let rawTotal = 0;
+    for(let d in scores){
+      rawTotal += (scores[d] + 8); // 每维度0~16，6维最大96
+    }
+    const totalScore = Math.round(rawTotal / (16 * geneDimensions.length) * 600);
     totalScoreText.textContent = totalScore;
 
     const chartColor = getColorByGeneType(age, gender);
@@ -461,9 +405,10 @@
       }
     });
 
+    // 生成英文prompt
     let prompt = `Anime-style portrait of a character with genetic trait scores (0-100):\n`;
     geneDimensions.forEach((dim, i) => {
-      prompt += `${dim}: ${dimensionScoresNormalized[i].toFixed(0)}\n`;
+      prompt += `${dim}: ${dimensionScoresNormalized[i]}\n`;
     });
     prompt += `Age: ${age}\nGender: ${gender === "male" ? "Male" : "Female"}`;
 
@@ -475,4 +420,3 @@
 
 </body>
 </html>
-

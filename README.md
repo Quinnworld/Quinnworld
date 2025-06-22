@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>标签问卷+雷达图+图像Prompt示范</title>
+<title>标签问卷示范+雷达图+Prompt生成</title>
 <style>
   body { max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif; background: #f9fbfd; padding: 20px; }
   h2, h3 { text-align: center; }
@@ -15,7 +15,7 @@
   button:disabled { background: #93c5fd; cursor: not-allowed; }
   #radarChartContainer { margin-top: 20px; text-align: center; }
   #interpretation, #promptOutput { white-space: pre-wrap; margin-top: 10px; font-size: 14px; color: #333; }
-  #promptOutput { background: #eef6ff; border: 1px solid #3b82f6; padding: 10px; border-radius: 6px; user-select: all; }
+  #promptOutput { background: #eef6ff; border: 1px solid #3b82f6; padding: 10px; border-radius: 6px; user-select: all; cursor: pointer; }
   #scoreOutput { font-weight: 700; font-size: 18px; margin-top: 10px; color: #1e40af; }
 </style>
 </head>
@@ -33,16 +33,18 @@
   <h3>分析结果</h3>
   <div id="radarChartContainer">
     <canvas id="radarChart" width="400" height="400"></canvas>
-    <div id="scoreOutput"></div> <!-- 新增综合得分显示 -->
+    <div id="scoreOutput"></div> 
     <div id="interpretation"></div>
   </div>
-  <h3>生成的图像Prompt</h3>
+  <h3>生成的图像Prompt（点击复制）</h3>
   <div id="promptOutput" title="点击复制全部"></div>
   <button id="btnRestart">重新开始</button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- 这里用官方CDN加载Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
 <script>
+  // 问题和标签，简化版，每题对应一个标签，分数-2到+2
   const questionPool = [
     {
       id: "Q1",
@@ -83,102 +85,15 @@
         { text: "比较负责", tags: { responsibility: 1 } },
         { text: "非常负责", tags: { responsibility: 2 } }
       ]
-    },
-    {
-      id: "Q5",
-      text: "你做决定时是否冲动？",
-      options: [
-        { text: "非常冲动", tags: { impulsivity: 2 } },
-        { text: "偶尔冲动", tags: { impulsivity: 1 } },
-        { text: "比较冷静", tags: { impulsivity: -1 } },
-        { text: "非常冷静", tags: { impulsivity: -2 } }
-      ]
-    },
-    {
-      id: "Q6",
-      text: "你容易感到焦虑吗？",
-      options: [
-        { text: "非常容易", tags: { anxiety: 2 } },
-        { text: "偶尔感到", tags: { anxiety: 1 } },
-        { text: "不太容易", tags: { anxiety: -1 } },
-        { text: "几乎不会", tags: { anxiety: -2 } }
-      ]
-    },
-    {
-      id: "Q7",
-      text: "你的自控力如何？",
-      options: [
-        { text: "非常差", tags: { self_control: -2 } },
-        { text: "一般", tags: { self_control: -1 } },
-        { text: "较好", tags: { self_control: 1 } },
-        { text: "非常好", tags: { self_control: 2 } }
-      ]
-    },
-    {
-      id: "Q8",
-      text: "你喜欢开放新观点吗？",
-      options: [
-        { text: "非常排斥", tags: { openness: -2 } },
-        { text: "有点抵触", tags: { openness: -1 } },
-        { text: "比较接受", tags: { openness: 1 } },
-        { text: "非常开放", tags: { openness: 2 } }
-      ]
-    },
-    {
-      id: "Q9",
-      text: "你是一个容易信任别人的人吗？",
-      options: [
-        { text: "非常不信任", tags: { agreeableness: -2 } },
-        { text: "不太信任", tags: { agreeableness: -1 } },
-        { text: "比较信任", tags: { agreeableness: 1 } },
-        { text: "非常信任", tags: { agreeableness: 2 } }
-      ]
-    },
-    {
-      id: "Q10",
-      text: "你对工作是否尽责？",
-      options: [
-        { text: "非常不尽责", tags: { conscientiousness: -2 } },
-        { text: "有时不尽责", tags: { conscientiousness: -1 } },
-        { text: "比较尽责", tags: { conscientiousness: 1 } },
-        { text: "非常尽责", tags: { conscientiousness: 2 } }
-      ]
-    },
-    {
-      id: "Q11",
-      text: "你在压力下表现如何？",
-      options: [
-        { text: "极易崩溃", tags: { stress_resilience: -2 } },
-        { text: "有时崩溃", tags: { stress_resilience: -1 } },
-        { text: "较好应对", tags: { stress_resilience: 1 } },
-        { text: "非常稳定", tags: { stress_resilience: 2 } }
-      ]
-    },
-    {
-      id: "Q12",
-      text: "你是否喜欢计划未来？",
-      options: [
-        { text: "完全不喜欢", tags: { future_planning: -2 } },
-        { text: "不太喜欢", tags: { future_planning: -1 } },
-        { text: "比较喜欢", tags: { future_planning: 1 } },
-        { text: "非常喜欢", tags: { future_planning: 2 } }
-      ]
     }
   ];
 
+  // 初始化标签分数
   let tagScores = {
     extraversion: 0,
     emotion_stability: 0,
     novelty_seek: 0,
-    responsibility: 0,
-    impulsivity: 0,
-    anxiety: 0,
-    self_control: 0,
-    openness: 0,
-    agreeableness: 0,
-    conscientiousness: 0,
-    stress_resilience: 0,
-    future_planning: 0
+    responsibility: 0
   };
 
   let currentQuestionIndex = 0;
@@ -193,11 +108,16 @@
   const promptOutput = document.getElementById("promptOutput");
   const scoreOutput = document.getElementById("scoreOutput");
 
+  // Chart.js实例变量
+  let radarChart = null;
+
+  // 渲染题目
   function renderQuestion() {
     const question = questionPool[currentQuestionIndex];
     qTextEl.textContent = question.text;
     optionsEl.innerHTML = "";
     btnNext.disabled = true;
+    selectedOptionIndex = null;
     question.options.forEach((opt, i) => {
       const div = document.createElement("div");
       div.className = "option";
@@ -209,6 +129,7 @@
     });
   }
 
+  // 选项点击
   function selectOption(idx) {
     selectedOptionIndex = idx;
     Array.from(optionsEl.children).forEach((el, i) => {
@@ -225,7 +146,6 @@
       tagScores[tag] += selectedOpt.tags[tag];
     }
     currentQuestionIndex++;
-    selectedOptionIndex = null;
     if (currentQuestionIndex >= questionPool.length) {
       showResult();
     } else {
@@ -233,118 +153,119 @@
     }
   };
 
-  function showResult() {
-    sectionQuiz.style.display = "none";
-    sectionResult.style.display = "block";
-    renderRadarChart();
-    renderInterpretation();
-    renderPrompt();
-    renderScore(); // 新增综合得分显示调用
+  // 渲染雷达图
+  function renderRadarChart() {
+    const ctx = document.getElementById("radarChart").getContext("2d");
+    const labels = Object.keys(tagScores);
+    const dataValues = labels.map(tag => tagScores[tag] + 2); // 使数据正向化（范围0~4）
+    const maxScore = 4; 
+
+    if (radarChart) {
+      radarChart.destroy();
+    }
+
+    radarChart = new Chart(ctx, {
+      type: "radar",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "标签评分",
+          data: dataValues,
+          fill: true,
+          backgroundColor: "rgba(59, 130, 246, 0.2)",
+          borderColor: "rgba(59, 130, 246, 1)",
+          pointBackgroundColor: "rgba(59, 130, 246, 1)",
+          pointBorderColor: "#fff",
+          pointHoverBackgroundColor: "#fff",
+          pointHoverBorderColor: "rgba(59, 130, 246, 1)"
+        }]
+      },
+      options: {
+        scales: {
+          r: {
+            min: 0,
+            max: maxScore,
+            ticks: { stepSize: 1 }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
   }
 
+  // 简要解读
   function renderInterpretation() {
     let lines = [];
     for (const tag in tagScores) {
       const val = tagScores[tag];
-      if (val >= 6) lines.push(`${tag}：显著偏高`);
-      else if (val <= -6) lines.push(`${tag}：显著偏低`);
+      if (val >= 2) lines.push(`${tag}：显著偏高`);
+      else if (val <= -2) lines.push(`${tag}：显著偏低`);
       else lines.push(`${tag}：正常范围`);
     }
     interpretationEl.textContent = lines.join("\n");
   }
 
-  // 新增：计算综合得分，满分100
+  // 计算综合得分（0~100）
   function renderScore() {
-    // 每个标签满分为 12 (因为12题每题最大+2或-2，12*2=24，满分=12*2=24;这里按绝对值24算，平移到0-100分)
-    // 先把所有标签分数归一化到0-24 (即加12)，然后算平均
-    // tagScores 可能负，范围-24到+24，因为12题，每题最大2分，但实际我们用了12题，每个标签分最大2，题中只有一题对应一个标签，所以标签分最大约为2*次数
-    // 简单起见，取分数范围[-12,12]（因为每标签大约对应1题，每题最大+2），转成0-24
-    // 但为了精度，我们先算所有标签绝对值最大12，转为0-24
-    // 实际上标签分数范围-24到+24不等，样例中最多±8，简化用±12
-
-    const maxAbsScore = 12;
-    let totalNormalized = 0;
+    // 分数范围[-2,2], 转成0~4
+    let total = 0;
     let count = 0;
     for (const tag in tagScores) {
-      // 归一化到0~24
-      let norm = tagScores[tag] + maxAbsScore;
-      if (norm < 0) norm = 0;
-      if (norm > 24) norm = 24;
-      totalNormalized += norm;
+      total += tagScores[tag] + 2;
       count++;
     }
-    // 平均归一化分数（0~24）
-    const avgNorm = totalNormalized / count;
-    // 转为0~100分
-    const score100 = Math.round((avgNorm / 24) * 100);
-
-    scoreOutput.textContent = `综合得分（满分100）：${score100}`;
+    const avg = total / count;
+    const score = Math.round((avg / 4) * 100);
+    scoreOutput.textContent = `综合得分（满分100）：${score}`;
   }
 
+  // 生成Prompt文本
   function renderPrompt() {
     let traits = [];
-    if (tagScores.extraversion >= 2) traits.push("outgoing and sociable");
-    else if (tagScores.extraversion <= -2) traits.push("introverted and reserved");
+    if (tagScores.extraversion >= 1) traits.push("outgoing and sociable");
+    else if (tagScores.extraversion <= -1) traits.push("introverted and reserved");
     else traits.push("balanced social behavior");
 
-    if (tagScores.emotion_stability >= 2) traits.push("emotionally stable");
-    else if (tagScores.emotion_stability <= -2) traits.push("emotionally sensitive");
+    if (tagScores.emotion_stability >= 1) traits.push("emotionally stable");
+    else if (tagScores.emotion_stability <= -1) traits.push("emotionally sensitive");
     else traits.push("moderate emotional responses");
 
-    if (tagScores.novelty_seek >= 2) traits.push("curious and open to new experiences");
-    else if (tagScores.novelty_seek <= -2) traits.push("prefers routine and familiarity");
+    if (tagScores.novelty_seek >= 1) traits.push("curious and open to new experiences");
+    else if (tagScores.novelty_seek <= -1) traits.push("prefers routine and familiarity");
     else traits.push("moderate openness");
 
-    if (tagScores.responsibility >= 2) traits.push("responsible and conscientious");
-    else if (tagScores.responsibility <= -2) traits.push("sometimes irresponsible");
-
-    if (tagScores.impulsivity >= 2) traits.push("impulsive behavior");
-    else if (tagScores.impulsivity <= -2) traits.push("calm and deliberate");
-
-    if (tagScores.anxiety >= 2) traits.push("anxious demeanor");
-    else if (tagScores.anxiety <= -2) traits.push("calm under pressure");
-
-    if (tagScores.self_control >= 2) traits.push("strong self-control");
-    else if (tagScores.self_control <= -2) traits.push("poor self-control");
-
-    if (tagScores.openness >= 2) traits.push("very open-minded");
-    else if (tagScores.openness <= -2) traits.push("closed-minded");
-
-    if (tagScores.agreeableness >= 2) traits.push("very trusting and cooperative");
-    else if (tagScores.agreeableness <= -2) traits.push("distrustful");
-
-    if (tagScores.conscientiousness >= 2) traits.push("highly conscientious");
-    else if (tagScores.conscientiousness <= -2) traits.push("lack of conscientiousness");
-
-    if (tagScores.stress_resilience >= 2) traits.push("stress-resilient");
-    else if (tagScores.stress_resilience <= -2) traits.push("stress-sensitive");
-
-    if (tagScores.future_planning >= 2) traits.push("future-oriented planner");
-    else if (tagScores.future_planning <= -2) traits.push("present-focused");
+    if (tagScores.responsibility >= 1) traits.push("responsible and conscientious");
+    else if (tagScores.responsibility <= -1) traits.push("sometimes irresponsible");
 
     const prompt = `Anime-style portrait of a person who is ${traits.join(", ")}, with a balanced and natural appearance, realistic lighting, soft colors, detailed eyes and hair, modern casual clothing, digital art.`;
 
     promptOutput.textContent = prompt;
+
     promptOutput.onclick = () => {
       navigator.clipboard.writeText(prompt);
       alert("Prompt 已复制到剪贴板！");
     };
   }
 
+  // 显示结果页
+  function showResult() {
+    sectionQuiz.style.display = "none";
+    sectionResult.style.display = "block";
+    renderRadarChart();
+    renderInterpretation();
+    renderPrompt();
+    renderScore();
+  }
+
+  // 重置开始
   document.getElementById("btnRestart").onclick = () => {
     tagScores = {
       extraversion: 0,
       emotion_stability: 0,
       novelty_seek: 0,
-      responsibility: 0,
-      impulsivity: 0,
-      anxiety: 0,
-      self_control: 0,
-      openness: 0,
-      agreeableness: 0,
-      conscientiousness: 0,
-      stress_resilience: 0,
-      future_planning: 0
+      responsibility: 0
     };
     currentQuestionIndex = 0;
     sectionResult.style.display = "none";
@@ -352,6 +273,7 @@
     renderQuestion();
   };
 
+  // 页面加载自动开始
   renderQuestion();
 </script>
 

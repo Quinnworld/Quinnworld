@@ -15,10 +15,10 @@
   .option.selected { background: #4f46e5; color: white; border-color: #4338ca; }
   button { width: 100%; padding: 12px; font-size: 16px; border: none; border-radius: 6px; background: #4338ca; color: white; cursor: pointer; }
   button:disabled { background: #a5b4fc; cursor: not-allowed; }
-  pre { background: #eee; padding: 10px; border-radius: 6px; overflow-x: auto; }
+  pre { background: #eee; padding: 10px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; }
   canvas { display: block; margin: 0 auto 20px auto; }
+  #totalScore { text-align: center; font-weight: 700; font-size: 18px; margin-bottom: 10px; }
 </style>
-<!-- 引入 Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -45,6 +45,8 @@
 
 <div class="section" id="sectionResult" style="display:none;">
   <h3>答题结束，基因标签雷达图评分：</h3>
+  <div id="totalScore">总分：<span id="totalScoreValue">0</span>/1000</div> <!-- 总分区 -->
+
   <canvas id="radarChart" width="400" height="400"></canvas>
 
   <h3>生成的动漫风格Prompt：</h3>
@@ -53,13 +55,12 @@
 </div>
 
 <script>
-  // 核心基因标签列表
   const geneTags = [
-    "extraversion", "emotion_stability", "novelty_seek", "responsibility",
-    "impulsivity", "anxiety", "self_control", "openness", "agreeableness", "conscientiousness"
+    "外向性", "情绪稳定性", "新奇寻求", "责任感",
+    "冲动性", "焦虑水平", "自我控制", "开放性", "宜人性", "尽责性"
   ];
 
-  // 题库示例，12题，每题4选项，每选项对应多个基因标签得分，分值范围 -2 ~ 2
+  // 题库同之前，省略重复部分，保持不变
   const questionPool = [
     {
       id: "Q1", text: "你喜欢参加社交活动吗？",
@@ -171,7 +172,20 @@
     }
   ];
 
-  // 年龄性别调整权重函数
+  // 映射中文标签到英文基因标签key，方便数据叠加
+  const tagKeyMap = {
+    "外向性": "extraversion",
+    "情绪稳定性": "emotion_stability",
+    "新奇寻求": "novelty_seek",
+    "责任感": "responsibility",
+    "冲动性": "impulsivity",
+    "焦虑水平": "anxiety",
+    "自我控制": "self_control",
+    "开放性": "openness",
+    "宜人性": "agreeableness",
+    "尽责性": "conscientiousness"
+  };
+
   function ageGenderAdjust(tags, age, gender){
     let adjusted = {...tags};
     if(age < 30){
@@ -184,7 +198,6 @@
     return adjusted;
   }
 
-  // 当前答题状态
   let tagScores = {};
   let askedIds = new Set();
   let currentQuestion = null;
@@ -194,7 +207,6 @@
   let age = 25;
   let gender = "male";
 
-  // 页面元素
   const sectionUserInfo = document.getElementById("sectionUserInfo");
   const sectionQuiz = document.getElementById("sectionQuiz");
   const sectionResult = document.getElementById("sectionResult");
@@ -207,8 +219,8 @@
   const btnRestart = document.getElementById("btnRestart");
   const inputAge = document.getElementById("inputAge");
   const selectGender = document.getElementById("selectGender");
+  const totalScoreValue = document.getElementById("totalScoreValue");
 
-  // 选项点击处理
   function selectOption(idx){
     selectedOptionIndex = idx;
     Array.from(optionsEl.children).forEach((el,i)=>{
@@ -217,7 +229,6 @@
     btnNext.disabled = false;
   }
 
-  // 动态选题策略：优先选择标签分数绝对值最大对应类别的未答题
   function selectNextCategory(){
     let entries = Object.entries(tagScores);
     if(entries.length === 0){
@@ -225,8 +236,8 @@
     }
     entries.sort((a,b)=>Math.abs(b[1]) - Math.abs(a[1]));
     for(let [cat] of entries){
-      if(questionPool.some(q=>q.id && !askedIds.has(q.id) && q.options.some(o=>o.tags && o.tags[cat] !== undefined))){
-        return cat;
+      if(questionPool.some(q=>q.id && !askedIds.has(q.id) && q.options.some(o=>o.tags && o.tags[catKeyMap[cat]] !== undefined))){
+        return catKeyMap[cat];
       }
     }
     for(let q of questionPool){
@@ -235,7 +246,6 @@
     return null;
   }
 
-  // 选题
   function selectNextQuestion(){
     const category = selectNextCategory();
     if(typeof category === "string"){
@@ -252,7 +262,6 @@
     return null;
   }
 
-  // 渲染题目
   function renderQuestion(q){
     currentQuestion = q;
     qTextEl.textContent = q.text;
@@ -269,10 +278,8 @@
     progressText.textContent = `第 ${questionCount+1} / ${maxQuestions} 题`;
   }
 
-  // 下一题按钮事件
   btnNext.onclick = ()=>{
     if(selectedOptionIndex === null) return;
-    // 叠加标签分数
     const selTags = currentQuestion.options[selectedOptionIndex].tags;
     for(let t in selTags){
       tagScores[t] = (tagScores[t] || 0) + selTags[t];
@@ -291,75 +298,77 @@
     }
   };
 
-  // 生成prompt文本（动漫风格）
   function generatePrompt(tags){
     const adjustedTags = ageGenderAdjust(tags, age, gender);
 
     let descs = [];
-    if((adjustedTags.extraversion || 0) > 1) descs.push("energetic and outgoing personality");
-    else if((adjustedTags.extraversion || 0) < -1) descs.push("calm and introverted demeanor");
-    else descs.push("balanced social behavior");
+    if((adjustedTags.extraversion || 0) > 1) descs.push("活泼外向的性格");
+    else if((adjustedTags.extraversion || 0) < -1) descs.push("沉静内向的气质");
+    else descs.push("社交行为均衡");
 
-    if((adjustedTags.emotion_stability || 0) > 1) descs.push("emotionally stable and confident");
-    else if((adjustedTags.emotion_stability || 0) < -1) descs.push("sensitive and prone to stress");
+    if((adjustedTags.emotion_stability || 0) > 1) descs.push("情绪稳定且自信");
+    else if((adjustedTags.emotion_stability || 0) < -1) descs.push("敏感且易受压力影响");
 
-    if((adjustedTags.novelty_seek || 0) > 1) descs.push("open to new experiences and curious");
-    else if((adjustedTags.novelty_seek || 0) < -1) descs.push("prefers familiarity and routine");
+    if((adjustedTags.novelty_seek || 0) > 1) descs.push("喜欢新奇与探索");
+    else if((adjustedTags.novelty_seek || 0) < -1) descs.push("偏好熟悉和规律");
 
-    if((adjustedTags.responsibility || 0) > 1) descs.push("responsible and reliable");
-    else if((adjustedTags.responsibility || 0) < -1) descs.push("sometimes careless or procrastinating");
+    if((adjustedTags.responsibility || 0) > 1) descs.push("责任感强且可靠");
+    else if((adjustedTags.responsibility || 0) < -1) descs.push("有时粗心或拖延");
 
-    if((adjustedTags.impulsivity || 0) > 1) descs.push("impulsive and spontaneous");
-    else if((adjustedTags.impulsivity || 0) < -1) descs.push("cautious and self-controlled");
+    if((adjustedTags.impulsivity || 0) > 1) descs.push("冲动且自发");
+    else if((adjustedTags.impulsivity || 0) < -1) descs.push("谨慎且自律");
 
-    if((adjustedTags.anxiety || 0) > 1) descs.push("often anxious or worried");
-    else if((adjustedTags.anxiety || 0) < -1) descs.push("calm under pressure");
+    if((adjustedTags.anxiety || 0) > 1) descs.push("经常焦虑和担忧");
+    else if((adjustedTags.anxiety || 0) < -1) descs.push("压力下冷静");
 
-    if((adjustedTags.self_control || 0) > 1) descs.push("excellent self-control");
-    else if((adjustedTags.self_control || 0) < -1) descs.push("sometimes struggles with self-discipline");
+    if((adjustedTags.self_control || 0) > 1) descs.push("极佳的自我控制力");
+    else if((adjustedTags.self_control || 0) < -1) descs.push("有时难以自律");
 
-    if((adjustedTags.openness || 0) > 1) descs.push("creative and imaginative");
-    else if((adjustedTags.openness || 0) < -1) descs.push("practical and conventional");
+    if((adjustedTags.openness || 0) > 1) descs.push("创造力丰富且富想象力");
+    else if((adjustedTags.openness || 0) < -1) descs.push("实用且传统");
 
-    if((adjustedTags.agreeableness || 0) > 1) descs.push("friendly and cooperative");
-    else if((adjustedTags.agreeableness || 0) < -1) descs.push("competitive or skeptical");
+    if((adjustedTags.agreeableness || 0) > 1) descs.push("友善且合作");
+    else if((adjustedTags.agreeableness || 0) < -1) descs.push("竞争且怀疑");
 
-    if((adjustedTags.conscientiousness || 0) > 1) descs.push("organized and diligent");
-    else if((adjustedTags.conscientiousness || 0) < -1) descs.push("sometimes careless");
+    if((adjustedTags.conscientiousness || 0) > 1) descs.push("有条理且勤勉");
+    else if((adjustedTags.conscientiousness || 0) < -1) descs.push("有时粗心");
 
-    const style = "Anime style portrait, vibrant colors, detailed eyes, modern casual clothes";
+    const style = "动漫风格，色彩明快，眼睛细致，现代休闲服饰";
 
-    return `Anime character description: A person with ${descs.join(", ")}. Style: ${style}.`;
+    return `动漫角色描述：一个${descs.join("，")}的人物。风格：${style}。`;
   }
 
-  // 展示结果，绘制雷达图，输出prompt
   function showResult(){
     sectionQuiz.style.display = "none";
     sectionResult.style.display = "block";
 
-    // 应用年龄性别修正
     const adjustedTags = ageGenderAdjust(tagScores, age, gender);
 
-    // 计算满分100制分数
-    // 基因标签分值可能区间约 [-24,24]（12题每题最多2分）
-    // 线性映射到 [0,100]
-    const radarData = geneTags.map(t=>{
-      const val = adjustedTags[t] || 0;
-      let score100 = Math.round(((val + 24) / 48) * 100);
-      if(score100 > 100) score100 = 100;
-      if(score100 < 0) score100 = 0;
-      return score100;
+    // 计算雷达图数据并映射0-100分
+    const radarData = geneTags.map(label => {
+      const key = tagKeyMap[label];
+      const val = adjustedTags[key] || 0;
+      let score = Math.round(((val + 24) / 48) * 100);
+      if(score > 100) score = 100;
+      if(score < 0) score = 0;
+      return score;
     });
 
-    // 绘制雷达图
+    // 计算总分（满分100 * 标签数）
+    const total = radarData.reduce((a,b) => a+b, 0);
+    totalScoreValue.textContent = `${total} / ${radarData.length * 100}`;
+
+    // 销毁旧图表（如果有）
     const ctx = document.getElementById('radarChart').getContext('2d');
     if(window.myRadarChart) window.myRadarChart.destroy();
+
+    // 新建雷达图，中文标签，显示点分数
     window.myRadarChart = new Chart(ctx, {
       type: 'radar',
       data: {
-        labels: geneTags.map(t => t.replace('_', ' ')),
+        labels: geneTags,
         datasets: [{
-          label: '基因标签得分 (满分100)',
+          label: '基因标签得分',
           data: radarData,
           fill: true,
           backgroundColor: 'rgba(67,56,202,0.2)',
@@ -378,7 +387,8 @@
             suggestedMax: 100,
             ticks: {
               stepSize: 20,
-              color: '#333'
+              color: '#333',
+              showLabelBackdrop: false
             },
             pointLabels: {
               font: { size: 14 },
@@ -387,18 +397,34 @@
           }
         },
         plugins: {
-          legend: { display: true, position: 'top' }
+          legend: { display: true, position: 'top' },
+          tooltip: {
+            enabled: true,
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': ' + context.parsed.r + ' 分';
+              }
+            }
+          },
+          datalabels: {
+            display: true
+          }
         },
         responsive: false,
-        maintainAspectRatio: false
+        maintainAspectRatio: false,
+        elements: {
+          point: {
+            radius: 5,
+            hoverRadius: 7
+          }
+        }
       }
     });
 
-    // 生成prompt文本
+    // 输出prompt，支持换行滚动
     promptOutput.textContent = generatePrompt(adjustedTags);
   }
 
-  // 启动答题
   btnStart.onclick = () => {
     let a = parseInt(inputAge.value);
     if(isNaN(a) || a < 18 || a > 80){
@@ -417,11 +443,11 @@
     renderQuestion(q);
   };
 
-  // 重新开始
   btnRestart.onclick = () => {
     sectionResult.style.display = "none";
     sectionUserInfo.style.display = "block";
   };
+
 </script>
 
 </body>

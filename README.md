@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>基因科学问卷 + 动漫Prompt生成（12题版）</title>
+<title>基因科学问卷 + 动漫Prompt生成</title>
 <style>
   body { max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif; background: #f0f4f8; padding: 20px; }
   h2 { text-align: center; }
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-<h2>基因科学问卷 + 动漫Prompt生成（12题）</h2>
+<h2>基因科学问卷 + 动漫Prompt生成</h2>
 
 <div class="section" id="sectionUserInfo">
   <label for="inputAge">年龄（不限）</label>
@@ -51,7 +51,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // 6个核心基因功能维度，基于基因科学划分
   const geneDimensions = [
     "Extraversion",
     "Emotional Stability",
@@ -61,7 +60,6 @@
     "Metabolism Efficiency"
   ];
 
-  // 12题题库，4选项，分值-2~2，严格关联6个基因维度
   const questions = [
     { text: "你喜欢参加社交活动吗？", options: [
       { text: "非常不喜欢", scores: {Extraversion:-2} },
@@ -157,25 +155,25 @@
   const promptOutput = document.getElementById('promptOutput');
   const btnRestart = document.getElementById('btnRestart');
 
-  btnStart.onclick = () => {
-    if (inputAge.value === "") {
-      alert("请输入年龄");
+  btnStart.addEventListener('click', () => {
+    if (inputAge.value.trim() === '') {
+      alert('请输入年龄');
       return;
     }
-    sectionUserInfo.style.display = "none";
-    sectionQuiz.style.display = "block";
+    sectionUserInfo.style.display = 'none';
+    sectionQuiz.style.display = 'block';
     currentIndex = 0;
     resetScores();
     showQuestion(currentIndex);
-  };
+  });
 
-  btnRestart.onclick = () => {
-    sectionResult.style.display = "none";
-    sectionUserInfo.style.display = "block";
+  btnRestart.addEventListener('click', () => {
+    sectionResult.style.display = 'none';
+    sectionUserInfo.style.display = 'block';
     btnNext.disabled = true;
     selectedOption = -1;
-    promptOutput.textContent = "";
-  };
+    promptOutput.textContent = '';
+  });
 
   function resetScores() {
     geneDimensions.forEach(d => scores[d] = 0);
@@ -184,18 +182,18 @@
   function showQuestion(idx) {
     selectedOption = -1;
     btnNext.disabled = true;
-    let q = questions[idx];
+    const q = questions[idx];
     questionText.textContent = `${idx + 1}. ${q.text}`;
-    optionsContainer.innerHTML = "";
+    optionsContainer.innerHTML = '';
     q.options.forEach((opt, i) => {
-      const div = document.createElement("div");
-      div.className = "option";
+      const div = document.createElement('div');
+      div.className = 'option';
       div.textContent = opt.text;
       div.onclick = () => {
         selectedOption = i;
         btnNext.disabled = false;
-        Array.from(optionsContainer.children).forEach((c, j) => {
-          c.classList.toggle("selected", i === j);
+        Array.from(optionsContainer.children).forEach((child, j) => {
+          child.classList.toggle('selected', i === j);
         });
       };
       optionsContainer.appendChild(div);
@@ -203,7 +201,7 @@
     progressText.textContent = `题目 ${idx + 1} / ${questions.length}`;
   }
 
-  btnNext.onclick = () => {
+  btnNext.addEventListener('click', () => {
     if (selectedOption === -1) return;
     const selectedScores = questions[currentIndex].options[selectedOption].scores;
     for (const dim in selectedScores) {
@@ -215,17 +213,18 @@
     if (currentIndex < questions.length) {
       showQuestion(currentIndex);
     } else {
-      sectionQuiz.style.display = "none";
+      sectionQuiz.style.display = 'none';
       showResult();
-      sectionResult.style.display = "block";
+      sectionResult.style.display = 'block';
     }
-  };
+  });
 
   function normalize(val) {
-    // 12题，每题范围[-2,2],最大24分，最小-24分，映射0~100
-    let norm = (val + questions.length * 2) / (questions.length * 4) * 100;
-    if (norm > 100) norm = 100;
-    if (norm < 0) norm = 0;
+    // 12题，每题[-2,2]，最大24分，最小-24分，映射0~100
+    const maxScore = questions.length * 2;
+    const minScore = -maxScore;
+    let norm = ((val - minScore) / (maxScore - minScore)) * 100;
+    norm = Math.min(100, Math.max(0, norm));
     return Math.round(norm);
   }
 
@@ -233,11 +232,11 @@
   function showResult() {
     const normalizedScores = geneDimensions.map(d => normalize(scores[d]));
     const age = inputAge.value;
-    const gender = selectGender.value === "male" ? "male" : "female";
+    const gender = selectGender.value === 'male' ? 'male' : 'female';
 
     renderRadarChart(geneDimensions, normalizedScores);
 
-    let lines = [];
+    const lines = [];
     lines.push(`Anime-style portrait of a ${gender} character, aged ${age},`);
     lines.push("with the following genetic trait scores (0-100 scale):");
     geneDimensions.forEach((d, i) => {
@@ -245,23 +244,23 @@
     });
     lines.push("The character's appearance and personality reflect these genetic influences.");
 
-    promptOutput.textContent = lines.join("\n");
+    promptOutput.textContent = lines.join('\n');
   }
 
   function renderRadarChart(labels, data) {
-    const ctx = document.getElementById("radarChart").getContext("2d");
+    const ctx = document.getElementById('radarChart').getContext('2d');
     if (radarChartInstance) radarChartInstance.destroy();
     radarChartInstance = new Chart(ctx, {
-      type: "radar",
+      type: 'radar',
       data: {
         labels: labels,
         datasets: [{
-          label: "Genetic Trait Scores",
+          label: 'Genetic Trait Scores',
           data: data,
-          backgroundColor: "rgba(67,56,202,0.3)",
-          borderColor: "rgba(67,56,202,1)",
+          backgroundColor: 'rgba(67,56,202,0.3)',
+          borderColor: 'rgba(67,56,202,1)',
           borderWidth: 2,
-          pointBackgroundColor: "rgba(67,56,202,1)"
+          pointBackgroundColor: 'rgba(67,56,202,1)'
         }]
       },
       options: {
@@ -273,9 +272,7 @@
             pointLabels: { font: { size: 12 } }
           }
         },
-        plugins: {
-          legend: { display: false }
-        }
+        plugins: { legend: { display: false } }
       }
     });
   }

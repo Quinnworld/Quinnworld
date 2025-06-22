@@ -1,9 +1,30 @@
+根据得到的基因型，挖掘用户自己不了解的优点，提供发展建议
+
+你的需求是：**根据推断的基因型，挖掘用户自己不了解的优点，并提供个性化发展建议**，同时集成你的微信收款码（已识别为[这张图片](https://pplx-res.cloudinary.com/image/upload/v1750588444/user_uploads/19241329/9b7936f2-1eeb-4500-99b9-9ddc57f69890/mm_facetoface_collect_qrcode_1750513571858.jpg)）。
+
+下面是**完整的前端实现思路和代码模板**（适合直接落地）：
+
+---
+
+## 1. 设计思路
+
+- **题库**：问题不直接问外貌或生理特征，而是问行为、感知、习惯、情绪等，选项与主流外貌相关多基因型有隐含映射。
+- **推断**：根据答题结果推断每个位点的最可能基因型。
+- **优点挖掘**：为每个基因型匹配“你自己可能不了解的优点”。
+- **发展建议**：结合基因型和优点，给出科学、个性化的成长建议。
+- **深度报告付费解锁**：集成你的微信收款码，扫码后解锁完整深度报告。
+
+---
+
+## 2. 代码模板（含优点挖掘与发展建议）
+
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>趣味个性发展报告</title>
+<title>基因型优点挖掘与成长建议</title>
 <style>
   body { max-width: 600px; margin: 20px auto; font-family: "微软雅黑", sans-serif; background: #fff; padding: 20px; color:#000; }
   h2,h3 { text-align:center; }
@@ -20,7 +41,7 @@
 </head>
 <body>
 
-<h2>外貌基因型智能推断测评</h2>
+<h2>基因型优点挖掘与成长建议</h2>
 
 <div id="sectionUserInfo">
   <label for="inputAge">年龄</label>
@@ -43,11 +64,11 @@
 </div>
 
 <div id="sectionResult" style="display:none;">
-  <h3>基因型推断结果</h3>
-  <pre id="geneResult"></pre>
-  <h3>基础发展报告（免费）</h3>
+  <h3>你的基因型潜在优点</h3>
+  <pre id="strengthResult"></pre>
+  <h3>初步发展建议（免费）</h3>
   <pre id="basicReport"></pre>
-  <h3>深度发展报告（付费）</h3>
+  <h3>深度成长报告（付费）</h3>
   <pre id="premiumReport" title="点击生成深度报告" style="background:#fff0f0; color:#888; cursor:pointer;">点击生成深度报告</pre>
   <div id="paySection" style="display:none;">
     <p>请扫码付款解锁深度报告</p>
@@ -68,117 +89,223 @@ function shuffle(arr) {
   return arr;
 }
 
-// 12题外貌基因题库（每选项可对应多个基因型和权重）
+// 12道行为/感知/习惯相关问题（选项隐含基因型）
 const geneQuestionBank = [
   {
-    question: "你的头发颜色？",
+    question: "你遇到新环境时，通常的反应是？",
     options: [
-      { text: "黑色", genotypes: { MC1R: { "WT/WT": 2, "WT/V": 1 }, OCA2: { "AA": 1 } } },
-      { text: "棕色", genotypes: { MC1R: { "WT/V": 2, "V/V": 1 }, OCA2: { "AG": 1 } } },
-      { text: "金色", genotypes: { MC1R: { "V/V": 2 }, OCA2: { "GG": 2 } } },
-      { text: "红色", genotypes: { MC1R: { "V/V": 3 }, OCA2: { "GG": 1 } } }
+      { text: "紧张，需要时间适应", genotypes: { SLC6A4: { "SS": 2 } } },
+      { text: "有点不安，但能适应", genotypes: { SLC6A4: { "SL": 2 } } },
+      { text: "很快就能融入", genotypes: { SLC6A4: { "LL": 1 } } },
+      { text: "非常兴奋，主动结交新朋友", genotypes: { SLC6A4: { "LL": 2 } } }
     ]
   },
   {
-    question: "你的眼睛颜色？",
+    question: "你喝咖啡的感受？",
     options: [
-      { text: "黑色", genotypes: { OCA2: { "AA": 2 }, HERC2: { "AA": 2 } } },
-      { text: "棕色", genotypes: { OCA2: { "AG": 2 }, HERC2: { "AG": 2 } } },
-      { text: "绿色", genotypes: { OCA2: { "GG": 2 }, HERC2: { "GG": 1 } } },
-      { text: "蓝色", genotypes: { OCA2: { "GG": 3 }, HERC2: { "GG": 2 } } }
+      { text: "喝了容易兴奋", genotypes: { CYP1A2: { "AA": 2 } } },
+      { text: "有点提神", genotypes: { CYP1A2: { "AC": 2 } } },
+      { text: "没啥感觉", genotypes: { CYP1A2: { "CC": 1 } } },
+      { text: "喝多少都能睡", genotypes: { CYP1A2: { "CC": 2 } } }
     ]
   },
   {
-    question: "你的皮肤在夏天暴晒后？",
+    question: "你对甜食的态度？",
     options: [
-      { text: "很容易晒黑", genotypes: { SLC45A2: { "AA": 2 }, SLC24A5: { "AA": 1 } } },
-      { text: "容易晒黑", genotypes: { SLC45A2: { "AG": 2 }, SLC24A5: { "AG": 1 } } },
-      { text: "不易晒黑", genotypes: { SLC45A2: { "GG": 2 }, SLC24A5: { "GG": 1 } } },
-      { text: "晒不黑，易晒伤", genotypes: { SLC45A2: { "GG": 2 }, SLC24A5: { "GG": 2 } } }
+      { text: "甜食爱好者", genotypes: { TAS1R2: { "TT": 2 } } },
+      { text: "偶尔喜欢", genotypes: { TAS1R2: { "CT": 2 } } },
+      { text: "无所谓", genotypes: { TAS1R2: { "CC": 1 } } },
+      { text: "不喜欢甜食", genotypes: { TAS1R2: { "CC": 2 } } }
     ]
   },
   {
-    question: "你的头发质地？",
+    question: "你运动习惯如何？",
     options: [
-      { text: "粗硬直发", genotypes: { EDAR: { "AA": 2 }, KRT71: { "CC": 1 } } },
-      { text: "偏硬直发", genotypes: { EDAR: { "AG": 2 }, KRT71: { "CT": 1 } } },
-      { text: "柔软直发", genotypes: { EDAR: { "GG": 2 }, KRT71: { "TT": 1 } } },
-      { text: "自然卷/波浪", genotypes: { EDAR: { "GG": 2 }, KRT71: { "TT": 2 } } }
+      { text: "每周多次运动", genotypes: { ACTN3: { "RR": 2 } } },
+      { text: "偶尔运动", genotypes: { ACTN3: { "RX": 2 } } },
+      { text: "很少运动", genotypes: { ACTN3: { "XX": 1 } } },
+      { text: "完全不运动", genotypes: { ACTN3: { "XX": 2 } } }
     ]
   },
   {
-    question: "你的鼻梁高度？",
+    question: "你喝酒容易脸红吗？",
     options: [
-      { text: "高鼻梁", genotypes: { FGFR2: { "AA": 2 }, PAX3: { "AA": 1 } } },
-      { text: "较高", genotypes: { FGFR2: { "AG": 2 }, PAX3: { "AG": 1 } } },
-      { text: "中等", genotypes: { FGFR2: { "GG": 2 }, PAX3: { "GG": 1 } } },
-      { text: "低鼻梁", genotypes: { FGFR2: { "GG": 2 }, PAX3: { "GG": 2 } } }
+      { text: "喝一点就脸红", genotypes: { ALDH2: { "AA": 2 } } },
+      { text: "喝多了才红", genotypes: { ALDH2: { "AG": 2 } } },
+      { text: "基本不红", genotypes: { ALDH2: { "GG": 1 } } },
+      { text: "从不脸红", genotypes: { ALDH2: { "GG": 2 } } }
     ]
   },
   {
-    question: "你的耳垢类型？",
+    question: "你吃辣的表现？",
     options: [
-      { text: "湿耳垢", genotypes: { ABCC11: { "GG": 2 } } },
-      { text: "偏湿", genotypes: { ABCC11: { "GA": 2 } } },
-      { text: "偏干", genotypes: { ABCC11: { "AA": 1 } } },
-      { text: "干耳垢", genotypes: { ABCC11: { "AA": 2 } } }
+      { text: "一点辣都受不了", genotypes: { TRPV1: { "AA": 2 } } },
+      { text: "微辣能接受", genotypes: { TRPV1: { "AG": 2 } } },
+      { text: "能吃中辣", genotypes: { TRPV1: { "GG": 1 } } },
+      { text: "无辣不欢", genotypes: { TRPV1: { "GG": 2 } } }
     ]
   },
   {
-    question: "你皮肤色素沉着情况？",
+    question: "你对压力的反应？",
     options: [
-      { text: "色素较深", genotypes: { ASIP: { "AA": 2 } } },
-      { text: "中等", genotypes: { ASIP: { "AG": 2 } } },
-      { text: "较浅", genotypes: { ASIP: { "GG": 1 } } },
-      { text: "极浅", genotypes: { ASIP: { "GG": 2 } } }
+      { text: "容易焦虑", genotypes: { SLC6A4: { "SS": 2 } } },
+      { text: "偶尔紧张", genotypes: { SLC6A4: { "SL": 2 } } },
+      { text: "一般能扛住", genotypes: { SLC6A4: { "LL": 1 } } },
+      { text: "遇事很冷静", genotypes: { SLC6A4: { "LL": 2 } } }
     ]
   },
   {
-    question: "你有雀斑吗？",
+    question: "你平时喜欢独处还是热闹？",
     options: [
-      { text: "明显", genotypes: { TYR: { "AA": 2 }, IRF4: { "TT": 1 } } },
-      { text: "有一些", genotypes: { TYR: { "AG": 2 }, IRF4: { "CT": 1 } } },
-      { text: "很少", genotypes: { TYR: { "GG": 1 }, IRF4: { "CC": 1 } } },
-      { text: "基本没有", genotypes: { TYR: { "GG": 2 }, IRF4: { "CC": 2 } } }
+      { text: "喜欢安静独处", genotypes: { DRD4: { "4R/4R": 2 } } },
+      { text: "偶尔独处", genotypes: { DRD4: { "4R/7R": 2 } } },
+      { text: "喜欢热闹", genotypes: { DRD4: { "7R/7R": 1 } } },
+      { text: "人多越开心", genotypes: { DRD4: { "7R/7R": 2 } } }
     ]
   },
   {
-    question: "你家族中有蓝眼睛成员吗？",
+    question: "你对新鲜事物的态度？",
     options: [
-      { text: "有且比例高", genotypes: { HERC2: { "GG": 2 } } },
-      { text: "有部分", genotypes: { HERC2: { "AG": 2 } } },
-      { text: "极少", genotypes: { HERC2: { "AA": 1 } } },
-      { text: "没有", genotypes: { HERC2: { "AA": 2 } } }
+      { text: "很保守", genotypes: { DRD4: { "4R/4R": 2 } } },
+      { text: "偏保守", genotypes: { DRD4: { "4R/7R": 2 } } },
+      { text: "愿意尝试", genotypes: { DRD4: { "7R/7R": 1 } } },
+      { text: "喜欢创新", genotypes: { DRD4: { "7R/7R": 2 } } }
     ]
   },
   {
-    question: "你的肤色属于？",
+    question: "你是否容易胖？",
     options: [
-      { text: "深色", genotypes: { SLC24A5: { "AA": 2 } } },
-      { text: "中等", genotypes: { SLC24A5: { "AG": 2 } } },
-      { text: "浅色", genotypes: { SLC24A5: { "GG": 1 } } },
-      { text: "非常浅", genotypes: { SLC24A5: { "GG": 2 } } }
+      { text: "喝水都胖", genotypes: { FTO: { "AA": 2 } } },
+      { text: "吃多才胖", genotypes: { FTO: { "AG": 2 } } },
+      { text: "不容易胖", genotypes: { FTO: { "GG": 1 } } },
+      { text: "怎么吃都不胖", genotypes: { FTO: { "GG": 2 } } }
     ]
   },
   {
-    question: "你的头发卷曲程度？",
+    question: "你对乳制品的反应？",
     options: [
-      { text: "非常卷", genotypes: { KRT71: { "TT": 2 } } },
-      { text: "中度卷", genotypes: { KRT71: { "CT": 2 } } },
-      { text: "微卷", genotypes: { KRT71: { "CC": 1 } } },
-      { text: "直发", genotypes: { KRT71: { "CC": 2 } } }
+      { text: "喝奶就肚子不舒服", genotypes: { LCT: { "CC": 2 } } },
+      { text: "喝多了才不适", genotypes: { LCT: { "CT": 2 } } },
+      { text: "偶尔有点反应", genotypes: { LCT: { "TT": 1 } } },
+      { text: "完全没问题", genotypes: { LCT: { "TT": 2 } } }
     ]
   },
   {
-    question: "你的唇型属于？",
+    question: "你对苦味食物的态度？",
     options: [
-      { text: "厚唇", genotypes: { TP63: { "AA": 2 } } },
-      { text: "中厚", genotypes: { TP63: { "AG": 2 } } },
-      { text: "中等", genotypes: { TP63: { "GG": 1 } } },
-      { text: "薄唇", genotypes: { TP63: { "GG": 2 } } }
+      { text: "非常讨厌", genotypes: { TAS2R38: { "TT": 2 } } },
+      { text: "不太喜欢", genotypes: { TAS2R38: { "CT": 2 } } },
+      { text: "能接受", genotypes: { TAS2R38: { "CC": 1 } } },
+      { text: "很喜欢", genotypes: { TAS2R38: { "CC": 2 } } }
     ]
   }
 ];
+
+const geneStrengths = {
+  SLC6A4: {
+    "LL": "你拥有较强的情绪自我调节能力和心理韧性，面对压力时更能保持冷静。",
+    "SL": "你具备一定的情绪调节能力，能在压力下逐步适应。",
+    "SS": "你对环境变化敏感，拥有细腻的情感体验和共情能力。"
+  },
+  CYP1A2: {
+    "AA": "你对咖啡因敏感，善于觉察身体信号，适合健康管理。",
+    "AC": "你能较好平衡兴奋与镇静，适应性强。",
+    "CC": "你对刺激物耐受力强，适合高强度工作和学习。"
+  },
+  TAS1R2: {
+    "TT": "你对甜味敏感，善于发现生活中的美好和细节。",
+    "CT": "你在享受美食和健康之间能找到平衡。",
+    "CC": "你自律性强，能控制饮食欲望。"
+  },
+  ACTN3: {
+    "RR": "你天生运动潜力突出，适合爆发力和耐力兼备的活动。",
+    "RX": "你运动适应性好，能胜任多种运动类型。",
+    "XX": "你持久力强，适合耐力型运动和长期目标坚持。"
+  },
+  ALDH2: {
+    "AA": "你对身体信号敏感，善于自我保护和健康管理。",
+    "AG": "你能适度享受生活，兼顾健康与社交。",
+    "GG": "你适应力强，能在多样环境下保持状态。"
+  },
+  TRPV1: {
+    "AA": "你对环境变化敏感，善于觉察细微差异。",
+    "AG": "你能适应不同饮食和生活习惯，灵活性强。",
+    "GG": "你对挑战有较强的接受度，敢于尝试新事物。"
+  },
+  DRD4: {
+    "4R/4R": "你稳定可靠，适合长期规划和深度专注。",
+    "4R/7R": "你兼具稳定与创新，适合多元发展。",
+    "7R/7R": "你富有探索精神，善于创新和适应变化。"
+  },
+  FTO: {
+    "AA": "你对身体变化敏感，善于调整生活方式。",
+    "AG": "你能平衡饮食和运动，适应性好。",
+    "GG": "你代谢效率高，适合高强度活动。"
+  },
+  LCT: {
+    "CC": "你善于发现身体需求，懂得自我调节。",
+    "CT": "你有较强的适应能力，能灵活调整饮食。",
+    "TT": "你对新环境和饮食有良好适应性。"
+  },
+  TAS2R38: {
+    "TT": "你对细节敏感，善于发现问题和机会。",
+    "CT": "你能兼顾感性与理性，适合多元环境。",
+    "CC": "你适应力强，能接受多样体验。"
+  }
+};
+
+const geneAdvice = {
+  SLC6A4: {
+    "LL": "建议多参与社交和挑战性活动，持续提升抗压能力。",
+    "SL": "建议适度锻炼情绪调节力，面对压力时积极寻求支持。",
+    "SS": "建议学习情绪管理技巧，关注心理健康，发挥共情优势。"
+  },
+  CYP1A2: {
+    "AA": "建议减少咖啡因摄入，保持良好作息。",
+    "AC": "建议根据身体反应调整饮食和作息。",
+    "CC": "建议合理利用高耐受力，注意劳逸结合。"
+  },
+  TAS1R2: {
+    "TT": "建议控制糖分摄入，保持饮食均衡。",
+    "CT": "建议享受美食的同时关注健康。",
+    "CC": "建议继续保持自律，适当奖励自己。"
+  },
+  ACTN3: {
+    "RR": "建议积极参与运动，发掘运动潜力。",
+    "RX": "建议尝试不同运动，找到最适合自己的类型。",
+    "XX": "建议选择耐力型运动，坚持长期目标。"
+  },
+  ALDH2: {
+    "AA": "建议少饮酒，关注身体信号。",
+    "AG": "建议适度社交，注意健康平衡。",
+    "GG": "建议发挥适应优势，注意健康管理。"
+  },
+  TRPV1: {
+    "AA": "建议选择适合自己的饮食和环境，避免过度刺激。",
+    "AG": "建议多尝试新事物，提升适应力。",
+    "GG": "建议利用挑战精神，带动团队创新。"
+  },
+  DRD4: {
+    "4R/4R": "建议专注于长期规划和深度学习。",
+    "4R/7R": "建议在稳定中不断创新，开拓多元发展。",
+    "7R/7R": "建议多参与探索性项目，发挥创新潜力。"
+  },
+  FTO: {
+    "AA": "建议关注体重变化，保持健康生活方式。",
+    "AG": "建议平衡饮食与锻炼，保持活力。",
+    "GG": "建议充分利用高代谢优势，挑战高强度目标。"
+  },
+  LCT: {
+    "CC": "建议选择低乳糖饮食，关注肠胃健康。",
+    "CT": "建议根据身体反应调整饮食。",
+    "TT": "建议多尝试新食物，丰富营养结构。"
+  },
+  TAS2R38: {
+    "TT": "建议发挥细致观察力，提升问题解决能力。",
+    "CT": "建议多元发展，适应不同环境。",
+    "CC": "建议多体验新事物，提升综合素质。"
+  }
+};
 
 let currentIndex = 0;
 let selectedOptions = [];
@@ -195,7 +322,7 @@ const optionsEl = document.getElementById("optionsContainer");
 const btnNext = document.getElementById("btnNext");
 const btnPrev = document.getElementById("btnPrev");
 const progressText = document.getElementById("progressText");
-const geneResultEl = document.getElementById("geneResult");
+const strengthResultEl = document.getElementById("strengthResult");
 const basicReportEl = document.getElementById("basicReport");
 const premiumReportEl = document.getElementById("premiumReport");
 const btnStart = document.getElementById("btnStart");
@@ -251,7 +378,6 @@ function calculateGenotypeScores() {
 }
 
 function getTopGenotypePerGene() {
-  // 按每个基因，选分数最高的基因型
   let geneTypeResult = {};
   let geneTypeScore = {};
   for (let key in genotypeScores) {
@@ -264,66 +390,30 @@ function getTopGenotypePerGene() {
   return geneTypeResult;
 }
 
-function generateGeneResultText(geneTypeResult) {
-  let text = "";
+function generateStrengthText(geneTypeResult) {
+  let arr = [];
   for (let gene in geneTypeResult) {
-    text += `${gene}：${geneTypeResult[gene]}\n`;
+    let gt = geneTypeResult[gene];
+    if(geneStrengths[gene] && geneStrengths[gene][gt]) {
+      arr.push(`【${gene}】${geneStrengths[gene][gt]}`);
+    }
   }
-  return text;
+  return arr.length ? arr.join('\n') : "你的潜在优点有待进一步发掘。";
 }
 
-function generateBasicReport(geneTypeResult) {
-  let report = "";
+function generateBasicAdvice(geneTypeResult) {
+  let arr = [];
   for (let gene in geneTypeResult) {
-    const gt = geneTypeResult[gene];
-    if (gene === "MC1R") {
-      report += gt.includes("V") ? "MC1R变异：浅色/红发概率高，注意防晒。\n" : "MC1R常见型：深色发色，紫外线抵抗力较好。\n";
-    }
-    if (gene === "OCA2") {
-      report += gt === "GG" ? "OCA2变异：浅色眼睛概率高，注意眼部防护。\n" : "OCA2常见型：深色眼睛，黑色素较多。\n";
-    }
-    if (gene === "SLC45A2") {
-      report += gt === "GG" ? "SLC45A2变异：皮肤较白，易晒伤，注意防晒。\n" : "SLC45A2常见型：皮肤偏深，耐晒能力强。\n";
-    }
-    if (gene === "EDAR") {
-      report += gt === "AA" ? "EDAR变异：头发粗硬直，汗腺发达，牙齿形态特殊。\n" : "EDAR常见型：头发柔软，汗腺发育一般。\n";
-    }
-    if (gene === "FGFR2") {
-      report += gt === "AA" ? "FGFR2变异：高鼻梁特征明显，面部立体感强。\n" : "FGFR2常见型：鼻梁中等或偏低，五官柔和。\n";
-    }
-    if (gene === "ABCC11") {
-      report += gt === "GG" ? "ABCC11变异：湿耳垢型，腋臭概率高，注意个人护理。\n" : "ABCC11常见型：干耳垢，体味轻。\n";
-    }
-    if (gene === "ASIP") {
-      report += gt === "AA" ? "ASIP变异：肤色较深，色素沉着明显。\n" : "ASIP常见型：肤色浅，色素沉着少。\n";
-    }
-    if (gene === "TYR") {
-      report += gt === "AA" ? "TYR变异：雀斑概率高，注意皮肤护理和防晒。\n" : "TYR常见型：雀斑少，皮肤均匀。\n";
-    }
-    if (gene === "HERC2") {
-      report += gt === "GG" ? "HERC2变异：蓝眼睛概率高，注意光线保护。\n" : "HERC2常见型：棕色或深色眼睛。\n";
-    }
-    if (gene === "SLC24A5") {
-      report += gt === "GG" ? "SLC24A5变异：皮肤极浅，需注意紫外线防护。\n" : "SLC24A5常见型：肤色中等或偏深。\n";
-    }
-    if (gene === "KRT71") {
-      report += gt === "TT" ? "KRT71变异：头发卷曲度高，易打理。\n" : "KRT71常见型：头发直或微卷。\n";
-    }
-    if (gene === "TP63") {
-      report += gt === "AA" ? "TP63变异：厚唇，面部立体感强。\n" : "TP63常见型：薄唇或中等唇型。\n";
-    }
-    if (gene === "PAX3") {
-      report += gt === "AA" ? "PAX3变异：鼻梁较高，面部立体感强。\n" : "PAX3常见型：鼻梁中等或偏低。\n";
-    }
-    if (gene === "IRF4") {
-      report += gt === "TT" ? "IRF4变异：雀斑概率高，注意皮肤护理。\n" : "IRF4常见型：雀斑少。\n";
+    let gt = geneTypeResult[gene];
+    if(geneAdvice[gene] && geneAdvice[gene][gt]) {
+      arr.push(`【${gene}】${geneAdvice[gene][gt]}`);
     }
   }
-  return report;
+  return arr.length ? arr.join('\n') : "建议保持自我探索，持续提升个人能力。";
 }
 
 function generatePremiumReport() {
-  return "这是基于你答题结果和最新外貌基因科学的深度发展报告，涵盖健康、护理、个性化美学建议等内容。\n（如需定制，请联系专业遗传咨询师）";
+  return "你的基因型展现出多方面的潜力和优势。建议结合自身特质，科学安排生活、学习与工作，持续发掘潜能，提升自我管理和成长能力。如需更详细的个性化成长方案，请扫码咨询专业顾问。";
 }
 
 btnStart.onclick = () => {
@@ -362,8 +452,8 @@ function renderResult(geneTypeResult) {
   sectionResult.style.display = "block";
   userHasPaid = false;
   paySection.style.display = "none";
-  geneResultEl.textContent = generateGeneResultText(geneTypeResult);
-  basicReportEl.textContent = generateBasicReport(geneTypeResult);
+  strengthResultEl.textContent = generateStrengthText(geneTypeResult);
+  basicReportEl.textContent = generateBasicAdvice(geneTypeResult);
   premiumReportEl.textContent = "点击生成深度报告";
 }
 
@@ -394,3 +484,17 @@ btnRestart.onclick = () => {
 </script>
 </body>
 </html>
+```
+
+---
+
+**说明：**
+- 题目全部为行为、习惯、感知等，不直接问生理特征。
+- 结果页“你的基因型潜在优点”专为挖掘用户自己不了解的优势。
+- “发展建议”结合基因型给出成长建议。
+- “深度报告”需扫码你的微信收款码解锁。
+
+如需进一步定制题库、优点词库或建议内容，欢迎随时告知！
+
+引用：
+[1] mm_facetoface_collect_qrcode_1750513571858.jpg https://pplx-res.cloudinary.com/image/upload/v1750588444/user_uploads/19241329/9b7936f2-1eeb-4500-99b9-9ddc57f69890/mm_facetoface_collect_qrcode_1750513571858.jpg

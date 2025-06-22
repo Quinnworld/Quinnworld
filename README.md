@@ -19,6 +19,8 @@
     li strong { color: #007acc; }
     #submit-btn { display: block; width: 100%; padding: 12px; font-size: 1.1em; background: #007acc; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
     #submit-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .payment-btn { display: block; width: 100%; padding: 12px; font-size: 1.1em; background: #ff9900; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; }
+    .payment-btn:disabled { background: #ccc; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -37,7 +39,11 @@
   <p id="total-score"></p>
   <p id="summary-text"></p>
   <h2>深度解析报告</h2>
-  <ul id="detail-list"></ul>
+  <div id="depth-report-content" style="display:none;">
+    <ul id="detail-list"></ul>
+  </div>
+  <button id="payment-btn" class="payment-btn">解锁深度发展报告（￥10）</button>
+  <p id="payment-status" style="text-align:center; margin-top:10px;"></p>
 </div>
 
 <script>
@@ -83,35 +89,11 @@ const questions = [
     { text: "坚持自己的方式，继续工作", scores: { Impulsivity: 6, AttentionControl: 6 } },
     { text: "消极情绪一直缠绕，难以走出困境", scores: { EmotionalStability: 3, StressResilience: 4 } }
   ] },
-  { q: "你对待新任务的态度是？", options: [
-    { text: "充满好奇，迅速开始行动", scores: { Impulsivity: 7, Sociability: 5 } },
-    { text: "谨慎小心，先了解清楚再行动", scores: { EmotionalStability: 8, AttentionControl: 7 } },
-    { text: "拖延，直到最后一分钟才开始做", scores: { StressResilience: 4, Impulsivity: 3 } },
-    { text: "如果不感兴趣，就会直接放弃", scores: { Sociability: 4, StressResilience: 5 } }
-  ] },
-  { q: "你通常如何应对失败？", options: [
-    { text: "总结经验，重新调整计划", scores: { EmotionalStability: 8, StressResilience: 6 } },
-    { text: "失落很久，难以接受", scores: { EmotionalStability: 4, StressResilience: 3 } },
-    { text: "向他人寻求安慰和鼓励", scores: { Sociability: 6, EmotionalStability: 5 } },
-    { text: "放弃尝试，避免失败的情境", scores: { StressResilience: 2, EmotionalStability: 3 } }
-  ] },
   { q: "你喜欢在团队中担任什么角色？", options: [
     { text: "领导角色，主导整个团队", scores: { Sociability: 9, Impulsivity: 7 } },
     { text: "执行者，听从领导安排", scores: { Sociability: 5, AttentionControl: 6 } },
     { text: "协调者，帮助大家沟通合作", scores: { Sociability: 8, EmotionalStability: 6 } },
     { text: "独立工作者，不喜欢干扰", scores: { Sociability: 3, StressResilience: 5 } }
-  ] },
-  { q: "你觉得自己在压力下能保持冷静吗？", options: [
-    { text: "能保持冷静，寻找解决办法", scores: { StressResilience: 8, EmotionalStability: 7 } },
-    { text: "偶尔能保持冷静，偶尔情绪失控", scores: { StressResilience: 5, EmotionalStability: 4 } },
-    { text: "容易情绪化，难以冷静思考", scores: { StressResilience: 3, EmotionalStability: 2 } },
-    { text: "完全失控，感到无法应对", scores: { StressResilience: 1, EmotionalStability: 1 } }
-  ] },
-  { q: "你在群体中的社交倾向如何？", options: [
-    { text: "非常外向，喜欢成为焦点", scores: { Sociability: 9 } },
-    { text: "较为内向，喜欢小范围交流", scores: { Sociability: 5 } },
-    { text: "很少主动，通常处于旁观者", scores: { Sociability: 3 } },
-    { text: "完全不喜欢社交，尽量避开人群", scores: { Sociability: 1 } }
   ] },
   { q: "你通常如何处理情绪波动？", options: [
     { text: "通过冥想、运动等方式平复情绪", scores: { EmotionalStability: 8, StressResilience: 7 } },
@@ -242,7 +224,25 @@ function displayResults() {
     return `<li><strong>${dimensionLabels[key]}</strong>: ${totalScores[key]}</li>`;
   }).join('');
   document.getElementById('detail-list').innerHTML = detailsList;
+
+  // 解锁深度发展报告
+  if (totalScore > 60) {
+    document.getElementById('payment-btn').disabled = false;
+  }
 }
+
+// 支付解锁深度报告
+document.getElementById('payment-btn').addEventListener('click', function() {
+  // 模拟支付过程
+  const paymentStatus = document.getElementById('payment-status');
+  paymentStatus.textContent = '支付处理中...';
+
+  setTimeout(function() {
+    // 假设支付成功
+    paymentStatus.textContent = '支付成功，您已解锁深度发展报告！';
+    document.getElementById('depth-report-content').style.display = 'block';  // 解锁深度报告内容
+  }, 2000);  // 模拟2秒支付过程
+});
 
 // 初始化
 renderQuestion();  // 初次渲染第一个问题

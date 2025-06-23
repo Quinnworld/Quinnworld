@@ -93,7 +93,17 @@
 <body>
 <div id="quiz-container">
   <h1>AI虚拟形象基因问卷</h1>
-  <div id="quiz"></div>
+  <div id="quiz">
+    <!-- 示例问题（正式使用请替换为自动生成） -->
+    <div class="question">
+      <h3>你喜欢什么样的户外活动？</h3>
+      <div class="option">海边日光浴</div>
+      <div class="option">森林徒步</div>
+      <div class="option">极限运动</div>
+      <div class="option">更喜欢室内</div>
+    </div>
+    <!-- 其他题目请继续添加 -->
+  </div>
   <button id="submitBtn">提交并生成AI形象描述</button>
   <div id="resultBox">
     <h3>AI Prompt（可用于图像生成）：</h3>
@@ -110,8 +120,17 @@
   const resultBox = document.getElementById("resultBox");
   const promptOutput = document.getElementById("promptOutput");
   const paywall = document.getElementById("paywall");
+  const options = document.querySelectorAll(".option");
+
+  options.forEach(opt => {
+    opt.addEventListener("click", () => {
+      opt.parentElement.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+      opt.classList.add("selected");
+    });
+  });
 
   submitBtn.onclick = function () {
+    // 模拟输出，可替换为真实计算结果
     promptOutput.textContent = "Anime-style portrait of a confident young woman with fair skin, 3D facial structure, glossy dark hair, and radiant presence.";
     resultBox.style.display = "block";
     paywall.style.display = "block";

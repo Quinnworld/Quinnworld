@@ -128,7 +128,7 @@
 
       <div id="paywall">
         <div>扫描下方二维码支付 ¥9.9 元，解锁<span style="color:#822;">深度人格分析报告完整版</span></div>
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=YOUR_PAYMENT_LINK" alt="支付二维码" />
+        <img src="https://pplx-res.cloudinary.com/image/upload/v1750655754/user_uploads/19241329/71824a55-7ec0-40e9-af8e-403b5e367882/mm_facetoface_collect_qrcode_1750513571858.jpg" alt="支付二维码" />
       </div>
 
       <button id="btnRestart">重新开始答题</button>

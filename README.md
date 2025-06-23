@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>基因型问卷 & 虚拟形象生成</title>
   <style>
-    body { max-width: 700px; margin: 24px auto; font-family: "微软雅黑", sans-serif; background: #fff; padding: 18px; color:; }
+    body { max-width: 700px; margin: 24px auto; font-family: "微软雅黑", sans-serif; background: #fff; padding: 18px; color: #222; }
     h2, h3 { text-align: center; }
     label, select, input[type=number] { width: 100%; margin: 10px 0 15px; font-size: 16px; }
     select, input[type=number] { padding: 8px; border-radius: 6px; border: 1px solid #ccc; }

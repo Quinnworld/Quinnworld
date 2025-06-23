@@ -2,9 +2,9 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>动态问卷 - 单题显示（从15题库中随机选择12题）</title>
+  <title>动态问卷 - 单题显示 （15题库中随机选12题，白色界面）</title>
   <style>
-    /* 禁止页面滚动，并保证全屏显示 */
+    /* 全屏并禁止滚动，整体背景设置为白色 */
     html, body {
       margin: 0;
       padding: 0;
@@ -12,8 +12,9 @@
       width: 100%;
       height: 100%;
       font-family: Arial, sans-serif;
+      background: #fff;
     }
-    /* 整个容器充满全屏 */
+    /* 容器背景也设为白色 */
     #container {
       width: 100vw;
       height: 100vh;
@@ -21,17 +22,15 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      background: #f4f4f4;
+      background: #fff;
       box-sizing: border-box;
       text-align: center;
       padding: 20px;
     }
-    /* 问题显示区域 */
+    /* 问题显示区域：纯白，无边框无阴影 */
     .question-box {
       background: #fff;
-      border: 1px solid #ddd;
       padding: 20px;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
       width: 80%;
       max-width: 600px;
       text-align: left;
@@ -63,15 +62,13 @@
       font-size: 16px;
       cursor: pointer;
     }
-    /* 结果展示区域 */
+    /* 结果展示区域也采用白色背景 */
     #resultContainer {
       margin-top: 20px;
       background: #fff;
-      border: 1px solid #ccc;
       padding: 10px;
       max-width: 600px;
       width: 80%;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
       text-align: left;
       box-sizing: border-box;
     }
@@ -98,8 +95,7 @@
       }
     }
     
-    // 定义 15 道问卷题目（所有题目均不涉及视觉图片特征，仅关注内在体验、思维方式和情感倾向）
-    // 注意：这里仅举例 15 道题目，你可以根据实际需求调整题目内容和基因权重。
+    // 定义 15 道问卷题目（注意：所有题目均聚焦内在体验、思维方式和情感倾向，不涉及颜色、场景或视觉图片特征）
     const allQuestions = [
       {
         id: 1,
@@ -221,7 +217,7 @@
           { optionText: "孤立自省，深思熟虑", geneWeights: { "GDF6": 0.20, "BMP2": 0.15, "SLC24A5": 0.10 } }
         ]
       },
-      // 以下三题为新增题，共15题
+      // 以下三题为新增的，总共15题
       {
         id: 13,
         questionText: "在与他人交流时，你更倾向于展现哪种内在品质？",
@@ -256,28 +252,25 @@
     
     // 随机排列整个题库
     shuffle(allQuestions);
-    // 动态选择前 12 道题进行问卷（从 15 道题目中随机抽取 12 道）
+    // 从 15 道题目中随机选取 12 道作为本次问卷
     const questions = allQuestions.slice(0, 12);
     
-    // 同时随机排列每道题的选项顺序
+    // 对每道题的选项也进行随机排列
     questions.forEach(q => shuffle(q.options));
     
-    // 用于存储每题答案的数组
+    // 用于存储用户答案的数组
     const userAnswers = new Array(questions.length).fill(null);
-    
     let currentQuestionIndex = 0;
     
-    // 渲染当前问题
+    // 渲染当前题目
     function renderCurrentQuestion() {
       const container = document.getElementById("questionContainer");
       container.innerHTML = "";
       const currentQ = questions[currentQuestionIndex];
-      
-      // 显示题号和问题内容
+      // 显示题号和题目内容
       const header = document.createElement("h2");
       header.textContent = `题目 ${currentQuestionIndex + 1}: ${currentQ.questionText}`;
       container.appendChild(header);
-      
       // 显示选项
       const optionsDiv = document.createElement("div");
       optionsDiv.className = "options";
@@ -299,7 +292,7 @@
       updateNavButtons();
     }
     
-    // 更新导航按钮显示
+    // 更新导航按钮显示（显示“上一题”与“下一题”或“提交”）
     function updateNavButtons() {
       const prevButton = document.getElementById("prevButton");
       const nextButton = document.getElementById("nextButton");
@@ -307,7 +300,7 @@
       nextButton.textContent = (currentQuestionIndex === questions.length - 1) ? "提交" : "下一题";
     }
     
-    // 保存当前问题答案
+    // 保存当前题目的答案
     function saveCurrentAnswer() {
       const radios = document.getElementsByName("question_" + questions[currentQuestionIndex].id);
       let selected = null;
@@ -320,7 +313,7 @@
       userAnswers[currentQuestionIndex] = selected;
     }
     
-    // 导航按钮事件处理
+    // 导航按钮事件
     document.getElementById("prevButton").addEventListener("click", function() {
       saveCurrentAnswer();
       if (currentQuestionIndex > 0) {
@@ -343,10 +336,9 @@
       }
     });
     
-    // 处理提交：累计所有选项对应的基因权重，并显示结果
+    // 提交处理：累计答案中各选项对应的基因权重，并显示结果
     function processSubmission() {
       let geneResults = {};
-      // 初始化所有目标基因得分
       const fullGeneList = [
         "PAX3", "EDAR", "MC1R", "RUNX2", "OCA2/HERC2", "SLC24A5",
         "TBX15", "SOX9", "BMP2", "DCHS2", "SLC45A2", "GDF6",
@@ -354,7 +346,6 @@
       ];
       fullGeneList.forEach(gene => { geneResults[gene] = 0; });
       
-      // 遍历每题，累计选项对应的基因权重
       questions.forEach((q, qIndex) => {
         const answerIndex = userAnswers[qIndex];
         if (answerIndex !== null) {
@@ -365,11 +356,11 @@
         }
       });
       
-      // 隐藏问卷显示区域和导航按钮区
+      // 隐藏问卷区域和导航按钮
       document.getElementById("questionContainer").style.display = "none";
       document.querySelector(".nav-buttons").style.display = "none";
       
-      // 显示累计结果
+      // 显示结果
       const resultContainer = document.getElementById("resultContainer");
       let html = "<h2>问卷结果（基因权重累计）</h2><ul>";
       for (const gene in geneResults) {
@@ -380,7 +371,7 @@
       resultContainer.style.display = "block";
     }
     
-    // 初次渲染当前问题
+    // 初次渲染当前题目
     renderCurrentQuestion();
   </script>
 </body>

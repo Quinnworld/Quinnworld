@@ -12,7 +12,6 @@
       background: #ffffff; 
       padding: 20px;
       color: #222;
-      transition: background-color 0.3s ease, color 0.3s ease;
     }
     h2, h3 { text-align: center; }
     label, select, input[type=number] {
@@ -39,18 +38,19 @@
       background: #4f46e5; color: white; border-color: #4338ca;
     }
     #promptOutput {
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      background: #eee; padding: 10px; border-radius: 6px; font-family: monospace;
+      white-space: pre-wrap; overflow-x: auto; background: #eee; padding: 10px; border-radius: 6px; font-family: monospace;
       user-select: all;
     }
     #totalScoreText {
       text-align: center; font-weight: bold; margin: 10px 0;
-      font-size: 18px;
+      font-size: 32px;
+      transition: color 0.5s;
     }
     canvas {
       display: block;
       margin: 0 auto 20px;
       max-width: 100%;
+      background: #fff;
     }
     #progressText {
       font-size: 14px; color: #555; text-align: center; margin-top: 5px;
@@ -76,6 +76,7 @@
   <select id="selectGender">
     <option value="male">男性</option>
     <option value="female">女性</option>
+    <option value="other">其他</option>
   </select>
   <button id="btnStart">开始答题</button>
 </div>
@@ -107,6 +108,15 @@
     { key: "openness", label: "开放性" }
   ];
 
+  const geneTypeColors = {
+    "冒险家型": "#FF5722",     // Orange-Red
+    "创新型": "#8E24AA",       // Purple
+    "自由浪漫型": "#1DE9B6",   // Cyan-Green
+    "可靠型": "#1976D2",       // Blue
+    "内向敏感型": "#388E3C",   // Deep Green
+    "普通型": "#888888"        // Gray
+  };
+
   const geneEffects = [
     {
       condition: (scores) => scores.extraversion > 70 && scores.novelty_seek > 70,
@@ -136,166 +146,15 @@
   ];
 
   function getGeneType(normalizedScores) {
-    let results = [];
-    geneEffects.forEach(effect => {
+    for (const effect of geneEffects) {
       if (effect.condition(normalizedScores)) {
-        results.push({ type: effect.type, description: effect.description });
+        return { type: effect.type, description: effect.description };
       }
-    });
-    return results;
-  }
-
-  let tagScores = {};
-  let askedIds = new Set();
-  let currentQuestion = null;
-  let selectedOptionIndex = null;
-  let questionCount = 0;
-  let age = 25;
-  let gender = "male";
-  const sectionUserInfo = document.getElementById("sectionUserInfo");
-  const sectionQuiz = document.getElementById("sectionQuiz");
-  const sectionResult = document.getElementById("sectionResult");
-  const qTextEl = document.getElementById("questionText");
-  const optionsEl = document.getElementById("optionsContainer");
-  const btnNext = document.getElementById("btnNext");
-  const btnPrev = document.getElementById("btnPrev");
-  const progressText = document.getElementById("progressText");
-  const promptOutput = document.getElementById("promptOutput");
-  const btnStart = document.getElementById("btnStart");
-  const btnRestart = document.getElementById("btnRestart");
-  const inputAge = document.getElementById("inputAge");
-  const selectGender = document.getElementById("selectGender");
-  const totalScoreText = document.getElementById("totalScoreText");
-  const radarCanvas = document.getElementById("radarChart");
-  const ctx = radarCanvas.getContext("2d");
-
-  function selectOption(idx) {
-    selectedOptionIndex = idx;
-    Array.from(optionsEl.children).forEach((el, i) => {
-      el.classList.toggle("selected", i === idx);
-    });
-    btnNext.disabled = false;
-  }
-
-  function renderQuestion(q) {
-    currentQuestion = q;
-    qTextEl.textContent = q.text;
-    optionsEl.innerHTML = "";
-    selectedOptionIndex = null;
-    btnNext.disabled = true;
-    btnPrev.disabled = questionCount <= 0;
-
-    for (let i = 0; i < q.options.length; i++) {
-      const opt = document.createElement("div");
-      opt.className = "option";
-      opt.textContent = q.options[i].text;
-      opt.onclick = () => selectOption(i);
-      optionsEl.appendChild(opt);
     }
-    progressText.textContent = `第 ${questionCount + 1} / ${questionPool.length} 题`;
+    return { type: "普通型", description: "你的人格较为均衡。" };
   }
 
-  function showResult() {
-    sectionQuiz.style.display = "none";
-    sectionResult.style.display = "block";
-
-    const normalizedScores = geneDimensions.map(dim => {
-      const raw = tagScores[dim.key] || 0;
-      let norm = (raw + 8) / 16 * 100;
-      norm = Math.min(100, Math.max(0, norm));
-      return +norm.toFixed(1);
-    });
-    const scoreObj = {};
-    geneDimensions.forEach((dim, idx) => {
-      scoreObj[dim.key] = normalizedScores[idx];
-    });
-
-    const totalScoreRaw = normalizedScores.reduce((a, b) => a + b, 0) / normalizedScores.length;
-    const totalScore = totalScoreRaw.toFixed(1);
-    totalScoreText.textContent = `总分: ${totalScore}`;
-
-    drawRadarChart(tagScores, age, gender);
-
-    let prompt = `Age: ${age}, Gender: ${gender === "male" ? "Male" : "Female"}\n`;
-    geneDimensions.forEach((dim, idx) => {
-      prompt += `${dim.label}: ${normalizedScores[idx]} / 100\n`;
-    });
-    promptOutput.textContent = prompt.trim();
-
-    let prevGeneTypeDivs = sectionResult.querySelectorAll('.gene-type-result');
-    prevGeneTypeDivs.forEach(div => div.remove());
-
-    const geneTypes = getGeneType(scoreObj);
-    if (geneTypes.length) {
-      geneTypes.forEach(t => {
-        const div = document.createElement("div");
-        div.className = "gene-type-result";
-        div.innerHTML = `<b>${t.type}</b>：${t.description}`;
-        sectionResult.appendChild(div);
-      });
-    } else {
-      const div = document.createElement("div");
-      div.className = "gene-type-result";
-      div.innerHTML = `<b>普通型</b>：你的人格较为均衡。`;
-      sectionResult.appendChild(div);
-    }
-  }
-
-  function drawRadarChart(scores, age, gender) {
-    ctx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
-    const labels = geneDimensions.map(d => d.label);
-    const center = 200, radius = 140;
-    const angles = labels.map((_, i) => 2 * Math.PI * i / labels.length - Math.PI / 2);
-
-    // 画雷达网格
-    ctx.strokeStyle = "#ccc";
-    ctx.lineWidth = 1;
-    for (let r = 0.3; r <= 1; r += 0.2) {
-      ctx.beginPath();
-      angles.forEach((a, i) => {
-        const x = center + Math.cos(a) * radius * r;
-        const y = center + Math.sin(a) * radius * r;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.closePath();
-      ctx.stroke();
-    }
-
-    // 连线与填色
-    const normalized = geneDimensions.map(d => {
-      const raw = scores[d.key] || 0;
-      let norm = (raw + 8) / 16;
-      norm = Math.min(1, Math.max(0, norm));
-      return norm;
-    });
-    ctx.beginPath();
-    angles.forEach((a, i) => {
-      const x = center + Math.cos(a) * radius * normalized[i];
-      const y = center + Math.sin(a) * radius * normalized[i];
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.closePath();
-    ctx.fillStyle = "rgba(67,56,202,0.2)";
-    ctx.fill();
-    ctx.strokeStyle = "#4338ca";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // 画顶点标签
-    ctx.font = "16px 微软雅黑";
-    ctx.fillStyle = "#222";
-    angles.forEach((a, i) => {
-      const x = center + Math.cos(a) * (radius + 18);
-      const y = center + Math.sin(a) * (radius + 18);
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(labels[i], x, y);
-    });
-  }
-
-  // 科学优化的12题问卷
+  // 题库15题
   const questionPool = [
     { id: "Q1", text: "你喜欢参加热闹的聚会吗？", options: [
       { text: "非常不喜欢", tags: { extraversion: -2 } },
@@ -368,32 +227,209 @@
       { text: "偶尔能保持", tags: { responsibility: -1 } },
       { text: "大多能保持", tags: { responsibility: 1, self_control: 1 } },
       { text: "始终充满动力", tags: { responsibility: 2, self_control: 2 } }
+    ]},
+    { id: "Q13", text: "你喜欢和朋友讨论新鲜话题吗？", options: [
+      { text: "很少", tags: { extraversion: -1, openness: -1 } },
+      { text: "偶尔", tags: { extraversion: 0 } },
+      { text: "经常", tags: { extraversion: 1, openness: 1 } },
+      { text: "总是", tags: { extraversion: 2, openness: 2 } }
+    ]},
+    { id: "Q14", text: "你做事容易虎头蛇尾吗？", options: [
+      { text: "经常如此", tags: { responsibility: -2, self_control: -2 } },
+      { text: "偶尔如此", tags: { responsibility: -1 } },
+      { text: "较少如此", tags: { responsibility: 1 } },
+      { text: "几乎不会", tags: { responsibility: 2, self_control: 2 } }
+    ]},
+    { id: "Q15", text: "你喜欢独自一人享受安静时光吗？", options: [
+      { text: "非常喜欢", tags: { extraversion: -2, emotion_stability: 1 } },
+      { text: "比较喜欢", tags: { extraversion: -1 } },
+      { text: "偶尔喜欢", tags: { extraversion: 1 } },
+      { text: "很少喜欢", tags: { extraversion: 2 } }
     ]}
   ];
 
-  btnNext.onclick = () => {
-    if (selectedOptionIndex === null) return;
-    const selTags = currentQuestion.options[selectedOptionIndex].tags;
-    for (let t in selTags) {
-      tagScores[t] = (tagScores[t] || 0) + selTags[t];
-    }
-    askedIds.add(currentQuestion.id);
-    questionCount++;
-    const nextQ = questionPool[questionCount] || null;
-    if (!nextQ) {
-      showResult();
-    } else {
-      renderQuestion(nextQ);
-    }
-  };
+  // 用于本次答题的抽取题目
+  let currentQuestions = [];
 
-  btnPrev.onclick = () => {
-    questionCount--;
-    const prevQ = questionPool[questionCount];
-    if (!prevQ) return;
-    renderQuestion(prevQ);
-  };
+  let tagScores = {};
+  let askedIds = new Set();
+  let currentQuestion = null;
+  let selectedOptionIndex = null;
+  let questionCount = 0;
+  let age = 25;
+  let gender = "male";
+  const sectionUserInfo = document.getElementById("sectionUserInfo");
+  const sectionQuiz = document.getElementById("sectionQuiz");
+  const sectionResult = document.getElementById("sectionResult");
+  const qTextEl = document.getElementById("questionText");
+  const optionsEl = document.getElementById("optionsContainer");
+  const btnNext = document.getElementById("btnNext");
+  const btnPrev = document.getElementById("btnPrev");
+  const progressText = document.getElementById("progressText");
+  const promptOutput = document.getElementById("promptOutput");
+  const btnStart = document.getElementById("btnStart");
+  const btnRestart = document.getElementById("btnRestart");
+  const inputAge = document.getElementById("inputAge");
+  const selectGender = document.getElementById("selectGender");
+  const totalScoreText = document.getElementById("totalScoreText");
+  const radarCanvas = document.getElementById("radarChart");
+  const ctx = radarCanvas.getContext("2d");
 
+  function drawQuestions(pool, count) {
+    const copy = pool.slice();
+    const result = [];
+    for (let i = 0; i < count; i++) {
+      const idx = Math.floor(Math.random() * copy.length);
+      result.push(copy.splice(idx, 1)[0]);
+    }
+    return result;
+  }
+
+  function selectOption(idx) {
+    selectedOptionIndex = idx;
+    Array.from(optionsEl.children).forEach((el, i) => {
+      el.classList.toggle("selected", i === idx);
+    });
+    btnNext.disabled = false;
+  }
+
+  function renderQuestion(q) {
+    currentQuestion = q;
+    qTextEl.textContent = q.text;
+    optionsEl.innerHTML = "";
+    selectedOptionIndex = null;
+    btnNext.disabled = true;
+    btnPrev.disabled = questionCount <= 0;
+
+    for (let i = 0; i < q.options.length; i++) {
+      const opt = document.createElement("div");
+      opt.className = "option";
+      opt.textContent = q.options[i].text;
+      opt.onclick = () => selectOption(i);
+      optionsEl.appendChild(opt);
+    }
+    progressText.textContent = `第 ${questionCount + 1} / ${currentQuestions.length} 题`;
+  }
+
+  function showResult() {
+    sectionQuiz.style.display = "none";
+    sectionResult.style.display = "block";
+
+    // 归一化分数 0~1，精度4位
+    const normalizedScores = geneDimensions.map(dim => {
+      const raw = tagScores[dim.key] || 0;
+      let norm = (raw + 8) / 16;
+      norm = Math.min(1, Math.max(0, norm));
+      norm = Number.isFinite(norm) ? norm : 0;
+      return +norm.toFixed(4);
+    });
+    // 0~100分
+    const scoreObj = {};
+    geneDimensions.forEach((dim, idx) => {
+      scoreObj[dim.key] = +(normalizedScores[idx]*100).toFixed(1);
+    });
+
+    // 总分
+    const totalScoreRaw = normalizedScores.reduce((a, b) => a + b, 0) / normalizedScores.length;
+    const totalScore = (totalScoreRaw*100).toFixed(1);
+
+    // 基因型与色调
+    const geneTypeObj = getGeneType(scoreObj);
+    const geneType = geneTypeObj.type;
+    const geneColor = geneTypeColors[geneType] || "#888888";
+
+    // 总分颜色
+    totalScoreText.textContent = `总分: ${totalScore}`;
+    totalScoreText.style.color = geneColor;
+
+    drawRadarChart(normalizedScores);
+
+    // prompt输出为纯分数，便于绘图
+    let prompt =
+      geneDimensions.map((dim, idx) => `${dim.label}: ${scoreObj[dim.key]}`).join('\n');
+    promptOutput.textContent = prompt;
+
+    // 展示复合基因型标签
+    let prevGeneTypeDivs = sectionResult.querySelectorAll('.gene-type-result');
+    prevGeneTypeDivs.forEach(div => div.remove());
+    const div = document.createElement("div");
+    div.className = "gene-type-result";
+    div.innerHTML = `<b>${geneType}</b>：${geneTypeObj.description}`;
+    sectionResult.appendChild(div);
+  }
+
+  // 画雷达图，归一化分数数组传入
+  function drawRadarChart(normArr) {
+    ctx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
+    const labels = geneDimensions.map(d => d.label);
+    const center = 200, radius = 140;
+    const count = labels.length;
+    const angleStep = 2 * Math.PI / count;
+    // 网格
+    ctx.strokeStyle = "#ccc";
+    ctx.lineWidth = 1;
+    for (let r = 0.2; r <= 1; r += 0.2) {
+      ctx.beginPath();
+      for (let i = 0; i < count; i++) {
+        const angle = angleStep * i - Math.PI/2;
+        const x = center + Math.cos(angle) * radius * r;
+        const y = center + Math.sin(angle) * radius * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+    // 维度连线
+    ctx.strokeStyle = "#bbb";
+    for (let i = 0; i < count; i++) {
+      const angle = angleStep * i - Math.PI/2;
+      ctx.beginPath();
+      ctx.moveTo(center, center);
+      ctx.lineTo(center + Math.cos(angle)*radius, center + Math.sin(angle)*radius);
+      ctx.stroke();
+    }
+    // 画得分区
+    ctx.beginPath();
+    for (let i = 0; i < count; i++) {
+      const angle = angleStep*i - Math.PI/2;
+      const r = normArr[i];
+      const x = center + Math.cos(angle) * radius * r;
+      const y = center + Math.sin(angle) * radius * r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = "rgba(67,56,202,0.18)";
+    ctx.fill();
+    ctx.strokeStyle = "#4338ca";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // 顶点圆点
+    ctx.fillStyle = "#4338ca";
+    for (let i = 0; i < count; i++) {
+      const angle = angleStep*i - Math.PI/2;
+      const r = normArr[i];
+      const x = center + Math.cos(angle) * radius * r;
+      const y = center + Math.sin(angle) * radius * r;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, 2*Math.PI);
+      ctx.fill();
+    }
+    // 标签
+    ctx.font = "16px 微软雅黑";
+    ctx.fillStyle = "#222";
+    for (let i = 0; i < count; i++) {
+      const angle = angleStep*i - Math.PI/2;
+      const x = center + Math.cos(angle) * (radius + 20);
+      const y = center + Math.sin(angle) * (radius + 20);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(labels[i], x, y);
+    }
+  }
+
+  // 答题逻辑，动态抽题，每次12题
   btnStart.onclick = () => {
     age = parseInt(inputAge.value);
     if (isNaN(age) || age < 0) {
@@ -404,10 +440,34 @@
     tagScores = {};
     askedIds.clear();
     questionCount = 0;
+    currentQuestions = drawQuestions(questionPool, 12);
     sectionUserInfo.style.display = "none";
     sectionResult.style.display = "none";
     sectionQuiz.style.display = "block";
-    renderQuestion(questionPool[questionCount]);
+    renderQuestion(currentQuestions[questionCount]);
+  };
+
+  btnNext.onclick = () => {
+    if (selectedOptionIndex === null) return;
+    const selTags = currentQuestion.options[selectedOptionIndex].tags;
+    for (let t in selTags) {
+      tagScores[t] = (tagScores[t] || 0) + selTags[t];
+    }
+    askedIds.add(currentQuestion.id);
+    questionCount++;
+    const nextQ = currentQuestions[questionCount] || null;
+    if (!nextQ) {
+      showResult();
+    } else {
+      renderQuestion(nextQ);
+    }
+  };
+
+  btnPrev.onclick = () => {
+    questionCount--;
+    const prevQ = currentQuestions[questionCount];
+    if (!prevQ) return;
+    renderQuestion(prevQ);
   };
 
   btnRestart.onclick = () => {

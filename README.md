@@ -107,7 +107,6 @@
     { key: "openness", label: "开放性" }
   ];
 
-  // 联动/交叉效应规则
   const geneEffects = [
     {
       condition: (scores) => scores.extraversion > 70 && scores.novelty_seek > 70,
@@ -134,7 +133,6 @@
       type: "内向敏感型",
       description: "你性格内向，情绪较敏感，喜欢安静的环境。"
     }
-    // 可以继续添加更多规则
   ];
 
   function getGeneType(normalizedScores) {
@@ -188,8 +186,6 @@
     btnNext.disabled = true;
     btnPrev.disabled = questionCount <= 0;
 
-    updatePageColor();
-
     for (let i = 0; i < q.options.length; i++) {
       const opt = document.createElement("div");
       opt.className = "option";
@@ -197,39 +193,28 @@
       opt.onclick = () => selectOption(i);
       optionsEl.appendChild(opt);
     }
-    progressText.textContent = `第 ${questionCount + 1} / ${maxQuestions} 题`;
-  }
-
-  function updatePageColor() {
-    const score = tagScores.extraversion || 0;
-    const intensity = Math.min(Math.abs(score) * 30, 255);
-    document.body.style.backgroundColor = `rgb(${255 - intensity}, ${255 - intensity}, ${255})`;
-    document.body.style.color = score < 0 ? '#333' : '#fff';
+    progressText.textContent = `第 ${questionCount + 1} / ${questionPool.length} 题`;
   }
 
   function showResult() {
     sectionQuiz.style.display = "none";
     sectionResult.style.display = "block";
 
-    // 计算归一化分数0~100，保留一位小数
     const normalizedScores = geneDimensions.map(dim => {
       const raw = tagScores[dim.key] || 0;
       let norm = (raw + 8) / 16 * 100; // 0~100
       norm = Math.min(100, Math.max(0, norm));
       return +norm.toFixed(1);
     });
-    // 维度名和分数组合成对象，便于判定
     const scoreObj = {};
     geneDimensions.forEach((dim, idx) => {
       scoreObj[dim.key] = normalizedScores[idx];
     });
 
-    // 总分 = 六维度平均，0~100，1位小数
     const totalScoreRaw = normalizedScores.reduce((a, b) => a + b, 0) / normalizedScores.length;
     const totalScore = totalScoreRaw.toFixed(1);
     totalScoreText.textContent = `总分: ${totalScore}`;
 
-    // 画雷达图
     drawRadarChart(tagScores, age, gender);
 
     let prompt = `Age: ${age}, Gender: ${gender === "male" ? "Male" : "Female"}\n`;
@@ -238,9 +223,8 @@
     });
     promptOutput.textContent = prompt.trim();
 
-    // 展示复合基因型标签
     let prevGeneTypeDivs = sectionResult.querySelectorAll('.gene-type-result');
-    prevGeneTypeDivs.forEach(div => div.remove()); // 清理旧结果
+    prevGeneTypeDivs.forEach(div => div.remove());
 
     const geneTypes = getGeneType(scoreObj);
     if (geneTypes.length) {
@@ -259,10 +243,10 @@
   }
 
   function drawRadarChart(scores, age, gender) {
-    // 你的原始雷达图代码
+    // 这里可以补充你的雷达图实现
   }
 
-  // 问卷题库举例（请补全更多问题）
+  // 题库：可自由增加问题！
   const questionPool = [
     { id: "Q1", text: "你喜欢参加社交活动吗？", options: [
       { text: "非常不喜欢", tags: { extraversion: -2 } },
@@ -282,7 +266,7 @@
       { text: "比较喜欢", tags: { novelty_seek: 1 } },
       { text: "非常喜欢", tags: { novelty_seek: 2 } }
     ]}
-    // 可继续添加更多问题
+    // 继续添加任意多的问题...
   ];
 
   btnNext.onclick = () => {

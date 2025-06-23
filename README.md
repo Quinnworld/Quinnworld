@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Genetic Questionnaire</title>
+    <title>Genetic Questionnaire with Dynamic Questions</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -81,6 +81,11 @@ const GENE_ASSOCIATIONS = {
         'dark': { genotype: 'SLC24A5', probability: 0.4 },
         'medium': { genotype: 'SLC24A5', probability: 0.6 },
         'light': { genotype: 'SLC24A5', probability: 0.8 }
+    },
+    'height': {
+        'short': { genotype: 'FGFR2', probability: 0.3 },
+        'medium': { genotype: 'FGFR2', probability: 0.5 },
+        'tall': { genotype: 'FGFR2', probability: 0.8 }
     }
 };
 
@@ -89,15 +94,15 @@ let userAnswers = {};
 let currentQuestionIndex = 0;
 const questionFlow = [
     {
-        question: "What is your gender?",
-        name: "gender",
-        options: ["male", "female", "other"],
-        nextQuestion: "age"
-    },
-    {
         question: "What is your age?",
         name: "age",
         options: ["<20", "20-40", "40-60", ">60"],
+        nextQuestion: "gender"
+    },
+    {
+        question: "What is your gender?",
+        name: "gender",
+        options: ["male", "female", "other"],
         nextQuestion: "hair_color"
     },
     {
@@ -116,6 +121,12 @@ const questionFlow = [
         question: "What is your skin color?",
         name: "skin_color",
         options: ["dark", "medium", "light"],
+        nextQuestion: "height"
+    },
+    {
+        question: "What is your height?",
+        name: "height",
+        options: ["short", "medium", "tall"],
         nextQuestion: null
     }
 ];
@@ -151,12 +162,13 @@ document.getElementById('submitBtn').addEventListener('click', function() {
     displayQuestion();
 });
 
-// Function to compute probabilities with gender and age effects
+// Function to compute probabilities with gender, age, and height effects
 function calculateProbabilities() {
     let probabilities = {
         'hair_color': GENE_ASSOCIATIONS.hair_color[userAnswers.hair_color].probability,
         'eye_color': GENE_ASSOCIATIONS.eye_color[userAnswers.eye_color].probability,
-        'skin_color': GENE_ASSOCIATIONS.skin_color[userAnswers.skin_color].probability
+        'skin_color': GENE_ASSOCIATIONS.skin_color[userAnswers.skin_color].probability,
+        'height': GENE_ASSOCIATIONS.height[userAnswers.height].probability
     };
 
     // Gender effect on hair and skin color
@@ -186,12 +198,14 @@ function generatePrompt() {
         Age: ${userAnswers.age},
         Hair Color: ${userAnswers.hair_color}, 
         Eye Color: ${userAnswers.eye_color}, 
-        Skin Color: ${userAnswers.skin_color}`;
+        Skin Color: ${userAnswers.skin_color},
+        Height: ${userAnswers.height}`;
 
     const predictedGenotype = {
         'hair_color': GENE_ASSOCIATIONS.hair_color[userAnswers.hair_color].genotype,
         'eye_color': GENE_ASSOCIATIONS.eye_color[userAnswers.eye_color].genotype,
-        'skin_color': GENE_ASSOCIATIONS.skin_color[userAnswers.skin_color].genotype
+        'skin_color': GENE_ASSOCIATIONS.skin_color[userAnswers.skin_color].genotype,
+        'height': GENE_ASSOCIATIONS.height[userAnswers.height].genotype
     };
 
     const output = document.getElementById('promptOutput');
@@ -202,10 +216,12 @@ function generatePrompt() {
         <p>Hair Color Gene: ${predictedGenotype.hair_color}</p>
         <p>Eye Color Gene: ${predictedGenotype.eye_color}</p>
         <p>Skin Color Gene: ${predictedGenotype.skin_color}</p>
+        <p>Height Gene: ${predictedGenotype.height}</p>
         <h4>Probabilities:</h4>
         <p>Hair Color Probability: ${probabilities.hair_color}</p>
         <p>Eye Color Probability: ${probabilities.eye_color}</p>
         <p>Skin Color Probability: ${probabilities.skin_color}</p>
+        <p>Height Probability: ${probabilities.height}</p>
     `;
 }
 

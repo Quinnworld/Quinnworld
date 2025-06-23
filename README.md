@@ -2,9 +2,9 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>动态问卷 - 单题显示 （15题库中随机选12题，白色界面）</title>
+  <title>动态问卷 - 单题显示（从15题库中随机选12题，计算联动与交叉效应）</title>
   <style>
-    /* 全屏并禁止滚动，整体背景设置为白色 */
+    /* 禁止页面滚动，并保证全屏显示，整体背景纯白 */
     html, body {
       margin: 0;
       padding: 0;
@@ -14,7 +14,7 @@
       font-family: Arial, sans-serif;
       background: #fff;
     }
-    /* 容器背景也设为白色 */
+    /* 容器区域 */
     #container {
       width: 100vw;
       height: 100vh;
@@ -27,7 +27,7 @@
       text-align: center;
       padding: 20px;
     }
-    /* 问题显示区域：纯白，无边框无阴影 */
+    /* 问题显示区域，不要边框或阴影，保持简洁 */
     .question-box {
       background: #fff;
       padding: 20px;
@@ -62,7 +62,7 @@
       font-size: 16px;
       cursor: pointer;
     }
-    /* 结果展示区域也采用白色背景 */
+    /* 结果展示区域 */
     #resultContainer {
       margin-top: 20px;
       background: #fff;
@@ -95,7 +95,7 @@
       }
     }
     
-    // 定义 15 道问卷题目（注意：所有题目均聚焦内在体验、思维方式和情感倾向，不涉及颜色、场景或视觉图片特征）
+    // 定义15道问卷题目（所有题目聚焦内在体验、思维方式、情感倾向，不涉及颜色、场景、视觉特征）
     const allQuestions = [
       {
         id: 1,
@@ -217,7 +217,7 @@
           { optionText: "孤立自省，深思熟虑", geneWeights: { "GDF6": 0.20, "BMP2": 0.15, "SLC24A5": 0.10 } }
         ]
       },
-      // 以下三题为新增的，总共15题
+      // 以下三题为新增，总共15题
       {
         id: 13,
         questionText: "在与他人交流时，你更倾向于展现哪种内在品质？",
@@ -252,10 +252,10 @@
     
     // 随机排列整个题库
     shuffle(allQuestions);
-    // 从 15 道题目中随机选取 12 道作为本次问卷
+    // 从15道题目中随机选取12道作为此次问卷
     const questions = allQuestions.slice(0, 12);
     
-    // 对每道题的选项也进行随机排列
+    // 对每道题的选项进行随机排列
     questions.forEach(q => shuffle(q.options));
     
     // 用于存储用户答案的数组
@@ -267,10 +267,12 @@
       const container = document.getElementById("questionContainer");
       container.innerHTML = "";
       const currentQ = questions[currentQuestionIndex];
-      // 显示题号和题目内容
+      
+      // 显示题号和题目文本
       const header = document.createElement("h2");
       header.textContent = `题目 ${currentQuestionIndex + 1}: ${currentQ.questionText}`;
       container.appendChild(header);
+      
       // 显示选项
       const optionsDiv = document.createElement("div");
       optionsDiv.className = "options";
@@ -292,7 +294,7 @@
       updateNavButtons();
     }
     
-    // 更新导航按钮显示（显示“上一题”与“下一题”或“提交”）
+    // 更新导航按钮显示
     function updateNavButtons() {
       const prevButton = document.getElementById("prevButton");
       const nextButton = document.getElementById("nextButton");
@@ -313,7 +315,40 @@
       userAnswers[currentQuestionIndex] = selected;
     }
     
-    // 导航按钮事件
+    // 联动与交叉效应计算函数
+    function computeInteractionEffects(geneResults) {
+      // 复制基础分数
+      let adjustedResults = {};
+      for (let gene in geneResults) {
+        adjustedResults[gene] = geneResults[gene];
+      }
+      
+      // 联动效应（Synergy）：若两个基因同时得分高，则额外加分；
+      // 例如 PAX3 与 EDAR；MC1R 与 SLC24A5；TBX15 与 SOX9。
+      const synergyRules = [
+        { genes: ["PAX3", "EDAR"], factor: 0.1 },
+        { genes: ["MC1R", "SLC24A5"], factor: 0.1 },
+        { genes: ["TBX15", "SOX9"], factor: 0.1 }
+      ];
+      synergyRules.forEach(rule => {
+        let bonus = rule.factor * Math.min(geneResults[rule.genes[0]] || 0, geneResults[rule.genes[1]] || 0);
+        adjustedResults[rule.genes[0]] += bonus;
+        adjustedResults[rule.genes[1]] += bonus;
+      });
+      
+      // 交叉效应（Cross-effect）：例如 DCHS2 与 SLC45A2 的得分影响 GDF6
+      const crossRules = [
+        { genes: ["DCHS2", "SLC45A2"], target: "GDF6", factor: 0.05 }
+      ];
+      crossRules.forEach(rule => {
+        let bonus = rule.factor * Math.min(geneResults[rule.genes[0]] || 0, geneResults[rule.genes[1]] || 0);
+        adjustedResults[rule.target] += bonus;
+      });
+      
+      return adjustedResults;
+    }
+    
+    // 导航事件处理
     document.getElementById("prevButton").addEventListener("click", function() {
       saveCurrentAnswer();
       if (currentQuestionIndex > 0) {
@@ -336,7 +371,7 @@
       }
     });
     
-    // 提交处理：累计答案中各选项对应的基因权重，并显示结果
+    // 处理提交，计算基础得分，然后应用联动与交叉效应，显示最终“总基因型”
     function processSubmission() {
       let geneResults = {};
       const fullGeneList = [
@@ -346,6 +381,7 @@
       ];
       fullGeneList.forEach(gene => { geneResults[gene] = 0; });
       
+      // 累加所有题目中所选选项的基因权重
       questions.forEach((q, qIndex) => {
         const answerIndex = userAnswers[qIndex];
         if (answerIndex !== null) {
@@ -356,17 +392,27 @@
         }
       });
       
+      // 根据联动和交叉效应函数对基础得分进行调整
+      const finalGeneResults = computeInteractionEffects(geneResults);
+      
       // 隐藏问卷区域和导航按钮
       document.getElementById("questionContainer").style.display = "none";
       document.querySelector(".nav-buttons").style.display = "none";
       
-      // 显示结果
+      // 显示结果：分别显示基础得分与调整后的“总基因型”
       const resultContainer = document.getElementById("resultContainer");
-      let html = "<h2>问卷结果（基因权重累计）</h2><ul>";
+      let html = "<h2>问卷结果（总基因型）</h2>";
+      html += "<h3>基础基因权重累计</h3><ul>";
       for (const gene in geneResults) {
         html += `<li>${gene}: ${geneResults[gene].toFixed(2)}</li>`;
       }
       html += "</ul>";
+      html += "<h3>引入联动与交叉效应后的综合得分</h3><ul>";
+      for (const gene in finalGeneResults) {
+        html += `<li>${gene}: ${finalGeneResults[gene].toFixed(2)}</li>`;
+      }
+      html += "</ul>";
+      
       resultContainer.innerHTML = html;
       resultContainer.style.display = "block";
     }

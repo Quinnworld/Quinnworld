@@ -11,6 +11,8 @@
             padding: 0;
             background-color: #f7f7f7;
             color: #333;
+            overflow: hidden; /* 禁止页面滚动 */
+            height: 100vh; /* 设置为视口高度 */
         }
 
         .container {
@@ -20,15 +22,21 @@
             padding: 20px;
             background-color: white;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         h1 {
             text-align: center;
             color: #4CAF50;
+            margin: 0;
         }
 
         .question {
             margin-bottom: 20px;
+            display: none; /* 默认隐藏所有问题 */
         }
 
         .question label {
@@ -69,6 +77,10 @@
             text-align: center;
             color: #4CAF50;
         }
+
+        .question.active {
+            display: block; /* 显示当前问题 */
+        }
     </style>
 </head>
 <body>
@@ -78,7 +90,7 @@
 
         <form id="surveyForm">
             <!-- 问题 1 -->
-            <div class="question">
+            <div class="question" id="question1">
                 <label>你多久进行一次运动？</label>
                 <div class="options">
                     <input type="radio" name="exercise" value="rarely"> 从不运动
@@ -86,10 +98,11 @@
                     <input type="radio" name="exercise" value="frequently"> 经常（每周3-4次）
                     <input type="radio" name="exercise" value="daily"> 每天都运动
                 </div>
+                <button type="button" class="btn-submit" onclick="nextQuestion(2)">下一题</button>
             </div>
 
             <!-- 问题 2 -->
-            <div class="question">
+            <div class="question" id="question2">
                 <label>你觉得自己容易增重吗？</label>
                 <div class="options">
                     <input type="radio" name="weight" value="easily_gain"> 很容易
@@ -97,10 +110,11 @@
                     <input type="radio" name="weight" value="hardly_gain"> 不容易
                     <input type="radio" name="weight" value="never_gain"> 一点都不容易
                 </div>
+                <button type="button" class="btn-submit" onclick="nextQuestion(3)">下一题</button>
             </div>
 
             <!-- 问题 3 -->
-            <div class="question">
+            <div class="question" id="question3">
                 <label>你喜欢吃哪些食物？</label>
                 <div class="options">
                     <input type="radio" name="diet" value="high_fat"> 高脂肪的食物（如油炸食品、薯片等）
@@ -108,10 +122,11 @@
                     <input type="radio" name="diet" value="vegetables_fruits"> 多吃蔬菜和水果
                     <input type="radio" name="diet" value="sweet_foods"> 偏甜食（如蛋糕、糖果）
                 </div>
+                <button type="button" class="btn-submit" onclick="nextQuestion(4)">下一题</button>
             </div>
 
             <!-- 问题 4 -->
-            <div class="question">
+            <div class="question" id="question4">
                 <label>你平时是否有皮肤过敏的情况？</label>
                 <div class="options">
                     <input type="radio" name="skin_allergy" value="often"> 经常过敏
@@ -119,10 +134,11 @@
                     <input type="radio" name="skin_allergy" value="rarely"> 很少过敏
                     <input type="radio" name="skin_allergy" value="never"> 从不过敏
                 </div>
+                <button type="button" class="btn-submit" onclick="nextQuestion(5)">下一题</button>
             </div>
 
             <!-- 问题 5 -->
-            <div class="question">
+            <div class="question" id="question5">
                 <label>你在阳光下待的时间通常有多久？</label>
                 <div class="options">
                     <input type="radio" name="sun_exposure" value="rarely"> 很少在阳光下
@@ -130,9 +146,8 @@
                     <input type="radio" name="sun_exposure" value="1_2_hours"> 1-2小时
                     <input type="radio" name="sun_exposure" value="more_2_hours"> 超过2小时
                 </div>
+                <button type="button" class="btn-submit" onclick="generatePrompt()">生成你的外貌描述</button>
             </div>
-
-            <button type="button" class="btn-submit" onclick="generatePrompt()">生成你的外貌描述</button>
         </form>
 
         <div class="result" id="result">
@@ -142,6 +157,27 @@
     </div>
 
     <script>
+        let currentQuestion = 1;
+
+        // 显示当前问题
+        function showQuestion(questionNumber) {
+            // 隐藏所有问题
+            let questions = document.querySelectorAll('.question');
+            questions.forEach((question) => {
+                question.classList.remove('active');
+            });
+            
+            // 显示当前问题
+            document.getElementById('question' + questionNumber).classList.add('active');
+        }
+
+        // 显示下一个问题
+        function nextQuestion(nextQuestionNumber) {
+            currentQuestion = nextQuestionNumber;
+            showQuestion(currentQuestion);
+        }
+
+        // 生成外貌描述
         function generatePrompt() {
             let exercise = document.querySelector('input[name="exercise"]:checked');
             let weight = document.querySelector('input[name="weight"]:checked');
@@ -187,6 +223,9 @@
             document.getElementById('description').textContent = prompt;
             document.getElementById('result').style.display = 'block';
         }
+
+        // 初始化显示第一个问题
+        showQuestion(currentQuestion);
     </script>
 </body>
 </html>

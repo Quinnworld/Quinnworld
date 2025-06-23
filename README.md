@@ -56,10 +56,8 @@
 
 <div class="container">
     <h2>Answer the following questions to generate your genetic prompt</h2>
-    <form id="geneticForm">
-        <div id="questionContainer"></div>
-        <button type="submit">Generate Prompt</button>
-    </form>
+    <div id="questionContainer"></div>
+    <button id="submitBtn">Generate Prompt</button>
     
     <div id="promptOutput" class="output"></div>
 </div>
@@ -94,7 +92,7 @@ const questionFlow = [
         question: "What is your gender?",
         name: "gender",
         options: ["male", "female", "other"],
-        nextQuestion: "hair_color"
+        nextQuestion: "age"
     },
     {
         question: "What is your age?",
@@ -140,16 +138,16 @@ function displayQuestion() {
     `;
 }
 
-// Handle form submission
-document.getElementById('geneticForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-
+// Function to handle the "Generate Prompt" button click
+document.getElementById('submitBtn').addEventListener('click', function() {
+    // Collect user input
     const currentQuestion = questionFlow[currentQuestionIndex];
     const selectedOption = document.getElementById(currentQuestion.name).value;
     userAnswers[currentQuestion.name] = selectedOption;
 
     currentQuestionIndex++;
 
+    // Display next question or generate the prompt
     displayQuestion();
 });
 

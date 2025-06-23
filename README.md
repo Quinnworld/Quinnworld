@@ -18,7 +18,11 @@
     label, select, input[type=number] {
       width: 100%; margin: 10px 0 15px; font-size: 16px;
     }
-    select,%; padding: 12px; font-size: 16px; border: none;
+    select, input[type=number] {
+      padding: 8px; border-radius: 6px; border: 1px solid #ccc;
+    }
+    button {
+      width: 100%; padding: 12px; font-size: 16px; border: none;
       border-radius: 6px; cursor: pointer;
       color: white;
       background: #4338ca;

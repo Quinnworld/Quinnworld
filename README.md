@@ -419,6 +419,218 @@
     
     // 初次渲染当前题目
     renderCurrentQuestion();
-  </script>
+  <script>
+  const geneDimensions = [
+    { key: "extraversion", label: "外向性" },
+    { key: "emotion_stability", label: "情绪稳定性" },
+    { key: "novelty_seek", label: "新奇寻求" },
+    { key: "responsibility", label: "责任感" },
+    { key: "self_control", label: "自控力" },
+    { key: "openness", label: "开放性" }
+  ];
+
+  // 联动/交叉效应规则
+  const geneEffects = [
+    {
+      condition: (scores) => scores.extraversion > 70 && scores.novelty_seek > 70,
+      type: "冒险家型",
+      description: "你具有极强的冒险精神和探索欲望，喜欢尝试新鲜事物。"
+    },
+    {
+      condition: (scores) => scores.responsibility > 80 && scores.emotion_stability > 80,
+      type: "可靠型",
+      description: "你非常可靠且情绪稳定，是团队的中坚力量。"
+    },
+    {
+      condition: (scores) => scores.openness > 75 && scores.novelty_seek > 75,
+      type: "创新型",
+      description: "你有很强的创新意识和接受新事物的能力。"
+    },
+    {
+      condition: (scores) => scores.self_control < 30 && scores.novelty_seek > 80,
+      type: "自由浪漫型",
+      description: "你崇尚自由，不喜欢被约束，追求独特体验。"
+    },
+    {
+      condition: (scores) => scores.extraversion < 30 && scores.emotion_stability < 30,
+      type: "内向敏感型",
+      description: "你性格内向，情绪较敏感，喜欢安静的环境。"
+    },
+    // 可继续添加更多规则
+  ];
+
+  function getGeneType(normalizedScores) {
+    let results = [];
+    geneEffects.forEach(effect => {
+      if (effect.condition(normalizedScores)) {
+        results.push({ type: effect.type, description: effect.description });
+      }
+    });
+    return results;
+  }
+
+  let tagScores = {};
+  let askedIds = new Set();
+  let currentQuestion = null;
+  let selectedOptionIndex = null;
+  let questionCount = 0;
+  const maxQuestions = 12;
+  let age = 25;
+  let gender = "male";
+  const sectionUserInfo = document.getElementById("sectionUserInfo");
+  const sectionQuiz = document.getElementById("sectionQuiz");
+  const sectionResult = document.getElementById("sectionResult");
+  const qTextEl = document.getElementById("questionText");
+  const optionsEl = document.getElementById("optionsContainer");
+  const btnNext = document.getElementById("btnNext");
+  const btnPrev = document.getElementById("btnPrev");
+  const progressText = document.getElementById("progressText");
+  const promptOutput = document.getElementById("promptOutput");
+  const btnStart = document.getElementById("btnStart");
+  const btnRestart = document.getElementById("btnRestart");
+  const inputAge = document.getElementById("inputAge");
+  const selectGender = document.getElementById("selectGender");
+  const totalScoreText = document.getElementById("totalScoreText");
+  const radarCanvas = document.getElementById("radarChart");
+  const ctx = radarCanvas.getContext("2d");
+
+  function selectOption(idx) {
+    selectedOptionIndex = idx;
+    Array.from(optionsEl.children).forEach((el, i) => {
+      el.classList.toggle("selected", i === idx);
+    });
+    btnNext.disabled = false;
+  }
+
+  function renderQuestion(q) {
+    currentQuestion = q;
+    qTextEl.textContent = q.text;
+    optionsEl.innerHTML = "";
+    selectedOptionIndex = null;
+    btnNext.disabled = true;
+    btnPrev.disabled = questionCount <= 0;
+
+    updatePageColor();
+
+    for (let i = 0; i < q.options.length; i++) {
+      const opt = document.createElement("div");
+      opt.className = "option";
+      opt.textContent = q.options[i].text;
+      opt.onclick = () => selectOption(i);
+      optionsEl.appendChild(opt);
+    }
+    progressText.textContent = `第 ${questionCount + 1} / ${maxQuestions} 题`;
+  }
+
+  function updatePageColor() {
+    const score = tagScores.extraversion || 0;
+    const intensity = Math.min(Math.abs(score) * 30, 255);
+    document.body.style.backgroundColor = `rgb(${255 - intensity}, ${255 - intensity}, ${255})`;
+    document.body.style.color = score < 0 ? '#333' : '#fff';
+  }
+
+  function showResult() {
+    sectionQuiz.style.display = "none";
+    sectionResult.style.display = "block";
+
+    // 计算归一化分数0~100，保留一位小数
+    const normalizedScores = geneDimensions.map(dim => {
+      const raw = tagScores[dim.key] || 0;
+      let norm = (raw + 8) / 16 * 100; // 0~100
+      norm = Math.min(100, Math.max(0, norm));
+      return +norm.toFixed(1);
+    });
+    // 将维度名和分数组合成对象，便于后续判定
+    const scoreObj = {};
+    geneDimensions.forEach((dim, idx) => {
+      scoreObj[dim.key] = normalizedScores[idx];
+    });
+
+    // 总分 = 六维度平均，0~100，1位小数
+    const totalScoreRaw = normalizedScores.reduce((a, b) => a + b, 0) / normalizedScores.length;
+    const totalScore = totalScoreRaw.toFixed(1);
+    totalScoreText.textContent = `总分: ${totalScore}`;
+
+    // 画雷达图
+    drawRadarChart(tagScores, age, gender);
+
+    let prompt = `Age: ${age}, Gender: ${gender === "male" ? "Male" : "Female"}\n`;
+    geneDimensions.forEach((dim, idx) => {
+      prompt += `${dim.label}: ${normalizedScores[idx]} / 100\n`;
+    });
+    promptOutput.textContent = prompt.trim();
+
+    // 展示复合基因型标签
+    let prevGeneTypeDivs = sectionResult.querySelectorAll('.gene-type-result');
+    prevGeneTypeDivs.forEach(div => div.remove()); // 清理旧结果
+
+    const geneTypes = getGeneType(scoreObj);
+    if (geneTypes.length) {
+      geneTypes.forEach(t => {
+        const div = document.createElement("div");
+        div.className = "gene-type-result";
+        div.innerHTML = `<b>${t.type}</b>：${t.description}`;
+        sectionResult.appendChild(div);
+      });
+    } else {
+      const div = document.createElement("div");
+      div.className = "gene-type-result";
+      div.innerHTML = `<b>普通型</b>：你的人格较为均衡。`;
+      sectionResult.appendChild(div);
+    }
+  }
+
+  function drawRadarChart(scores, age, gender) {
+    // 画雷达图的代码（你的原始实现）
+  }
+
+  btnNext.onclick = () => {
+    if (selectedOptionIndex === null) return;
+    const selTags = currentQuestion.options[selectedOptionIndex].tags;
+    for (let t in selTags) {
+      tagScores[t] = (tagScores[t] || 0) + selTags[t];
+    }
+    askedIds.add(currentQuestion.id);
+    questionCount++;
+    const nextQ = questionPool[questionCount] || null;
+    if (!nextQ) {
+      showResult();
+    } else {
+      renderQuestion(nextQ);
+    }
+  };
+
+  btnPrev.onclick = () => {
+    questionCount--;
+    const prevQ = questionPool[questionCount];
+    if (!prevQ) return;
+    renderQuestion(prevQ);
+  };
+
+  btnStart.onclick = () => {
+    age = parseInt(inputAge.value);
+    if (isNaN(age) || age < 0) {
+      alert("请输入有效年龄（非负整数）");
+      return;
+    }
+    gender = selectGender.value;
+    tagScores = {};
+    askedIds.clear();
+    questionCount = 0;
+    sectionUserInfo.style.display = "none";
+    sectionResult.style.display = "none";
+    sectionQuiz.style.display = "block";
+    renderQuestion(questionPool[questionCount]);
+  };
+
+  btnRestart.onclick = () => {
+    tagScores = {};
+    askedIds.clear();
+    questionCount = 0;
+    sectionResult.style.display = "none";
+    sectionQuiz.style.display = "none";
+    sectionUserInfo.style.display = "block";
+  };
+</script>
 </body>
 </html>

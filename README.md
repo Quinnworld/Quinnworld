@@ -247,26 +247,80 @@
   }
 
   // 题库：可自由增加问题！
-  const questionPool = [
-    { id: "Q1", text: "你喜欢参加社交活动吗？", options: [
-      { text: "非常不喜欢", tags: { extraversion: -2 } },
-      { text: "不太喜欢", tags: { extraversion: -1 } },
-      { text: "比较喜欢", tags: { extraversion: 1 } },
-      { text: "非常喜欢", tags: { extraversion: 2 } }
-    ]},
-    { id: "Q2", text: "面对压力时你的情绪表现？", options: [
-      { text: "非常紧张和焦虑", tags: { emotion_stability: -2, self_control: -1 } },
-      { text: "有些不安", tags: { emotion_stability: -1, self_control: 0 } },
-      { text: "情绪稳定", tags: { emotion_stability: 1, self_control: 1 } },
-      { text: "非常冷静", tags: { emotion_stability: 2, self_control: 2 } }
-    ]},
-    { id: "Q3", text: "你喜欢尝试新鲜事物吗？", options: [
-      { text: "完全不喜欢", tags: { novelty_seek: -2 } },
-      { text: "不太喜欢", tags: { novelty_seek: -1 } },
-      { text: "比较喜欢", tags: { novelty_seek: 1 } },
-      { text: "非常喜欢", tags: { novelty_seek: 2 } }
-    ]}
-    // 继续添加任意多的问题...
+    const questionPool = [
+  { id: "Q1", text: "你喜欢参加热闹的聚会吗？", options: [
+    { text: "非常不喜欢", tags: { extraversion: -2 } },
+    { text: "不太喜欢", tags: { extraversion: -1 } },
+    { text: "比较喜欢", tags: { extraversion: 1 } },
+    { text: "非常喜欢", tags: { extraversion: 2 } }
+  ]},
+  { id: "Q2", text: "遇到突发问题时，你能迅速冷静下来吗？", options: [
+    { text: "很难冷静", tags: { emotion_stability: -2, self_control: -1 } },
+    { text: "偶尔能冷静", tags: { emotion_stability: -1 } },
+    { text: "大多能冷静", tags: { emotion_stability: 1, self_control: 1 } },
+    { text: "总能冷静", tags: { emotion_stability: 2, self_control: 2 } }
+  ]},
+  { id: "Q3", text: "你喜欢尝试新鲜的体验或爱好？", options: [
+    { text: "完全不喜欢", tags: { novelty_seek: -2 } },
+    { text: "不太喜欢", tags: { novelty_seek: -1 } },
+    { text: "比较喜欢", tags: { novelty_seek: 1 } },
+    { text: "非常喜欢", tags: { novelty_seek: 2 } }
+  ]},
+  { id: "Q4", text: "你会主动规划和安排自己的任务吗？", options: [
+    { text: "几乎不会", tags: { responsibility: -2 } },
+    { text: "偶尔会", tags: { responsibility: -1 } },
+    { text: "经常会", tags: { responsibility: 1 } },
+    { text: "总是会", tags: { responsibility: 2 } }
+  ]},
+  { id: "Q5", text: "你能自觉克制住即刻的欲望吗？", options: [
+    { text: "很难控制", tags: { self_control: -2 } },
+    { text: "偶尔能控制", tags: { self_control: -1 } },
+    { text: "大多能控制", tags: { self_control: 1 } },
+    { text: "非常容易控制", tags: { self_control: 2 } }
+  ]},
+  { id: "Q6", text: "你喜欢结识不同背景的人吗？", options: [
+    { text: "完全不喜欢", tags: { openness: -2 } },
+    { text: "不太喜欢", tags: { openness: -1 } },
+    { text: "比较喜欢", tags: { openness: 1 } },
+    { text: "非常喜欢", tags: { openness: 2 } }
+  ]},
+  { id: "Q7", text: "遇到压力时，你会主动寻求社交支持吗？", options: [
+    { text: "很少会", tags: { extraversion: -1, emotion_stability: -1 } },
+    { text: "偶尔会", tags: { extraversion: 0 } },
+    { text: "经常会", tags: { extraversion: 1, emotion_stability: 1 } },
+    { text: "总是会", tags: { extraversion: 2, emotion_stability: 2 } }
+  ]},
+  { id: "Q8", text: "你对新环境适应能力如何？", options: [
+    { text: "很难适应", tags: { novelty_seek: -1, openness: -1 } },
+    { text: "适应较慢", tags: { openness: 0 } },
+    { text: "适应较快", tags: { novelty_seek: 1, openness: 1 } },
+    { text: "非常容易适应", tags: { novelty_seek: 2, openness: 2 } }
+  ]},
+  { id: "Q9", text: "你习惯按计划一步步完成目标吗？", options: [
+    { text: "很少按计划", tags: { responsibility: -2, self_control: -1 } },
+    { text: "偶尔按计划", tags: { responsibility: -1 } },
+    { text: "经常按计划", tags: { responsibility: 1, self_control: 1 } },
+    { text: "总是按计划", tags: { responsibility: 2, self_control: 2 } }
+  ]},
+  { id: "Q10", text: "你容易被情绪影响做出冲动决定吗？", options: [
+    { text: "经常如此", tags: { self_control: -2, emotion_stability: -1 } },
+    { text: "偶尔如此", tags: { self_control: -1 } },
+    { text: "较少如此", tags: { self_control: 1 } },
+    { text: "几乎不会", tags: { self_control: 2, emotion_stability: 1 } }
+  ]},
+  { id: "Q11", text: "你乐于接受与自己观点不同的事物吗？", options: [
+    { text: "很难接受", tags: { openness: -2 } },
+    { text: "偶尔接受", tags: { openness: -1 } },
+    { text: "较易接受", tags: { openness: 1 } },
+    { text: "非常乐于接受", tags: { openness: 2 } }
+  ]},
+  { id: "Q12", text: "面对长期目标，你能持续保持动力吗？", options: [
+    { text: "很难保持", tags: { responsibility: -2, self_control: -1 } },
+    { text: "偶尔能保持", tags: { responsibility: -1 } },
+    { text: "大多能保持", tags: { responsibility: 1, self_control: 1 } },
+    { text: "始终充满动力", tags: { responsibility: 2, self_control: 2 } }
+  ]}
+];  // 继续添加任意多的问题...
   ];
 
   btnNext.onclick = () => {

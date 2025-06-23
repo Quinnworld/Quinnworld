@@ -1,217 +1,192 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Genetic Questionnaire</title>
+    <title>基因型推测问卷</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: #f7f7f7;
+            color: #333;
         }
-        header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
+
         .container {
-            width: 60%;
-            margin: 20px auto;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
             padding: 20px;
             background-color: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        select, button {
+
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+
+        .question {
+            margin-bottom: 20px;
+        }
+
+        .question label {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .question input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .question .options {
+            margin-bottom: 10px;
+        }
+
+        .btn-submit {
+            display: block;
             width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
+            padding: 12px;
             background-color: #4CAF50;
             color: white;
             border: none;
+            font-size: 16px;
             cursor: pointer;
+            border-radius: 5px;
         }
-        button:hover {
-            background-color: #45a049;
-        }
-        .output {
+
+        .result {
             margin-top: 20px;
-            padding: 10px;
-            background-color: #f4f4f4;
-            border: 1px solid #ccc;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            display: none;
+        }
+
+        .result h3 {
+            text-align: center;
+            color: #4CAF50;
         }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>Genetic Questionnaire</h1>
-</header>
+    <div class="container">
+        <h1>基因型推测问卷</h1>
 
-<div class="container">
-    <h2>Answer the following questions to generate your genetic prompt</h2>
-    <div id="questionContainer"></div>
-    <button id="submitBtn">Generate Prompt</button>
-    
-    <div id="promptOutput" class="output"></div>
-</div>
+        <form id="surveyForm">
+            <!-- 问题 1 -->
+            <div class="question">
+                <label>你多久进行一次运动？</label>
+                <div class="options">
+                    <input type="radio" name="exercise" value="rarely"> 从不运动
+                    <input type="radio" name="exercise" value="occasionally"> 偶尔（每周1-2次）
+                    <input type="radio" name="exercise" value="frequently"> 经常（每周3-4次）
+                    <input type="radio" name="exercise" value="daily"> 每天都运动
+                </div>
+            </div>
 
-<script>
-// Initial dataset for genetic associations with probabilities
-const GENE_ASSOCIATIONS = {
-    'hair_color': {
-        'black': { genotype: 'MC1R', probability: 0.4 },
-        'brown': { genotype: 'MC1R', probability: 0.5 },
-        'blonde': { genotype: 'MC1R', probability: 0.3 },
-        'red': { genotype: 'MC1R', probability: 0.2 }
-    },
-    'eye_color': {
-        'brown': { genotype: 'OCA2', probability: 0.7 },
-        'blue': { genotype: 'OCA2', probability: 0.5 },
-        'green': { genotype: 'OCA2', probability: 0.3 },
-        'gray': { genotype: 'OCA2', probability: 0.2 }
-    },
-    'skin_color': {
-        'dark': { genotype: 'SLC24A5', probability: 0.4 },
-        'medium': { genotype: 'SLC24A5', probability: 0.6 },
-        'light': { genotype: 'SLC24A5', probability: 0.8 }
-    }
-};
+            <!-- 问题 2 -->
+            <div class="question">
+                <label>你觉得自己容易增重吗？</label>
+                <div class="options">
+                    <input type="radio" name="weight" value="easily_gain"> 很容易
+                    <input type="radio" name="weight" value="slightly_easily"> 稍微容易
+                    <input type="radio" name="weight" value="hardly_gain"> 不容易
+                    <input type="radio" name="weight" value="never_gain"> 一点都不容易
+                </div>
+            </div>
 
-// Dynamic question flow with gender and age effects
-let userAnswers = {};
-let currentQuestionIndex = 0;
-const questionFlow = [
-    {
-        question: "What is your gender?",
-        name: "gender",
-        options: ["male", "female", "other"],
-        nextQuestion: "age"
-    },
-    {
-        question: "What is your age?",
-        name: "age",
-        options: ["<20", "20-40", "40-60", ">60"],
-        nextQuestion: "hair_color"
-    },
-    {
-        question: "What is your hair color?",
-        name: "hair_color",
-        options: ["black", "brown", "blonde", "red"],
-        nextQuestion: "eye_color"
-    },
-    {
-        question: "What is your eye color?",
-        name: "eye_color",
-        options: ["brown", "blue", "green", "gray"],
-        nextQuestion: "skin_color"
-    },
-    {
-        question: "What is your skin color?",
-        name: "skin_color",
-        options: ["dark", "medium", "light"],
-        nextQuestion: null
-    }
-];
+            <!-- 问题 3 -->
+            <div class="question">
+                <label>你喜欢吃哪些食物？</label>
+                <div class="options">
+                    <input type="radio" name="diet" value="high_fat"> 高脂肪的食物（如油炸食品、薯片等）
+                    <input type="radio" name="diet" value="high_protein"> 偏重蛋白质食物（如肉类、鱼类）
+                    <input type="radio" name="diet" value="vegetables_fruits"> 多吃蔬菜和水果
+                    <input type="radio" name="diet" value="sweet_foods"> 偏甜食（如蛋糕、糖果）
+                </div>
+            </div>
 
-// Function to display current question
-function displayQuestion() {
-    if (currentQuestionIndex >= questionFlow.length) {
-        generatePrompt();
-        return;
-    }
+            <!-- 问题 4 -->
+            <div class="question">
+                <label>你平时是否有皮肤过敏的情况？</label>
+                <div class="options">
+                    <input type="radio" name="skin_allergy" value="often"> 经常过敏
+                    <input type="radio" name="skin_allergy" value="occasionally"> 偶尔过敏
+                    <input type="radio" name="skin_allergy" value="rarely"> 很少过敏
+                    <input type="radio" name="skin_allergy" value="never"> 从不过敏
+                </div>
+            </div>
 
-    const currentQuestion = questionFlow[currentQuestionIndex];
-    const questionContainer = document.getElementById("questionContainer");
+            <!-- 问题 5 -->
+            <div class="question">
+                <label>你在阳光下待的时间通常有多久？</label>
+                <div class="options">
+                    <input type="radio" name="sun_exposure" value="rarely"> 很少在阳光下
+                    <input type="radio" name="sun_exposure" value="less_1_hour"> 1小时以内
+                    <input type="radio" name="sun_exposure" value="1_2_hours"> 1-2小时
+                    <input type="radio" name="sun_exposure" value="more_2_hours"> 超过2小时
+                </div>
+            </div>
 
-    questionContainer.innerHTML = `
-        <label for="${currentQuestion.name}">${currentQuestion.question}</label>
-        <select id="${currentQuestion.name}" name="${currentQuestion.name}">
-            ${currentQuestion.options.map(option => `<option value="${option}">${option}</option>`).join('')}
-        </select>
-    `;
-}
+            <button type="button" class="btn-submit" onclick="generatePrompt()">生成你的外貌描述</button>
+        </form>
 
-// Function to handle the "Generate Prompt" button click
-document.getElementById('submitBtn').addEventListener('click', function() {
-    // Collect user input
-    const currentQuestion = questionFlow[currentQuestionIndex];
-    const selectedOption = document.getElementById(currentQuestion.name).value;
-    userAnswers[currentQuestion.name] = selectedOption;
+        <div class="result" id="result">
+            <h3>根据你的回答，生成的外貌描述是：</h3>
+            <p id="description"></p>
+        </div>
+    </div>
 
-    currentQuestionIndex++;
+    <script>
+        function generatePrompt() {
+            let exercise = document.querySelector('input[name="exercise"]:checked');
+            let weight = document.querySelector('input[name="weight"]:checked');
+            let diet = document.querySelector('input[name="diet"]:checked');
+            let skin_allergy = document.querySelector('input[name="skin_allergy"]:checked');
+            let sun_exposure = document.querySelector('input[name="sun_exposure"]:checked');
 
-    // Display next question or generate the prompt
-    displayQuestion();
-});
+            if (!exercise || !weight || !diet || !skin_allergy || !sun_exposure) {
+                alert('请回答所有问题');
+                return;
+            }
 
-// Function to compute probabilities with gender and age effects
-function calculateProbabilities() {
-    let probabilities = {
-        'hair_color': GENE_ASSOCIATIONS.hair_color[userAnswers.hair_color].probability,
-        'eye_color': GENE_ASSOCIATIONS.eye_color[userAnswers.eye_color].probability,
-        'skin_color': GENE_ASSOCIATIONS.skin_color[userAnswers.skin_color].probability
-    };
+            let prompt = "基于你的回答，生成的外貌描述如下：";
 
-    // Gender effect on hair and skin color
-    if (userAnswers.gender === "male") {
-        probabilities['hair_color'] *= 1.2;  // Male typically have thicker hair
-    } else if (userAnswers.gender === "female") {
-        probabilities['skin_color'] *= 1.1;  // Females generally have smoother skin
-    }
+            if (exercise.value === 'rarely' || exercise.value === 'occasionally') {
+                prompt += "你似乎没有很多运动，体型可能较为圆润。";
+            } else if (exercise.value === 'frequently' || exercise.value === 'daily') {
+                prompt += "你经常运动，体型可能较为结实，肌肉线条清晰。";
+            }
 
-    // Age effect on skin and hair
-    if (userAnswers.age === "<20") {
-        probabilities['skin_color'] *= 1.2;  // Younger skin tends to be smoother
-    } else if (userAnswers.age === ">60") {
-        probabilities['skin_color'] *= 0.8;  // Older skin tends to have wrinkles and spots
-        probabilities['hair_color'] *= 0.6;  // Gray hair more common with age
-    }
+            if (weight.value === 'easily_gain') {
+                prompt += "你容易增重，体型可能偏圆润。";
+            } else if (weight.value === 'hardly_gain') {
+                prompt += "你较难增重，体型可能偏瘦。";
+            }
 
-    return probabilities;
-}
+            if (diet.value === 'high_fat') {
+                prompt += "你喜欢吃高脂肪食物，可能体型偏圆润。";
+            } else if (diet.value === 'vegetables_fruits') {
+                prompt += "你偏爱蔬菜和水果，体型较为健康。";
+            }
 
-// Function to generate the final prompt
-function generatePrompt() {
-    const probabilities = calculateProbabilities();
+            if (sun_exposure.value === 'more_2_hours') {
+                prompt += "你常在阳光下，皮肤可能较为健康的小麦色。";
+            } else if (sun_exposure.value === 'less_1_hour') {
+                prompt += "你很少在阳光下，皮肤可能偏白。";
+            }
 
-    const prompt = `Generated prompt for your character: 
-        Gender: ${userAnswers.gender}, 
-        Age: ${userAnswers.age},
-        Hair Color: ${userAnswers.hair_color}, 
-        Eye Color: ${userAnswers.eye_color}, 
-        Skin Color: ${userAnswers.skin_color}`;
+            if (skin_allergy.value === 'often') {
+                prompt += "你的皮肤较为敏感，可能容易出现过敏反应。";
+            }
 
-    const predictedGenotype = {
-        'hair_color': GENE_ASSOCIATIONS.hair_color[userAnswers.hair_color].genotype,
-        'eye_color': GENE_ASSOCIATIONS.eye_color[userAnswers.eye_color].genotype,
-        'skin_color': GENE_ASSOCIATIONS.skin_color[userAnswers.skin_color].genotype
-    };
-
-    const output = document.getElementById('promptOutput');
-    output.innerHTML = `
-        <h3>Your Genetic Prompt:</h3>
-        <p>${prompt}</p>
-        <h4>Predicted Genotype:</h4>
-        <p>Hair Color Gene: ${predictedGenotype.hair_color}</p>
-        <p>Eye Color Gene: ${predictedGenotype.eye_color}</p>
-        <p>Skin Color Gene: ${predictedGenotype.skin_color}</p>
-        <h4>Probabilities:</h4>
-        <p>Hair Color Probability: ${probabilities.hair_color}</p>
-        <p>Eye Color Probability: ${probabilities.eye_color}</p>
-        <p>Skin Color Probability: ${probabilities.skin_color}</p>
-    `;
-}
-
-// Start the questionnaire
-displayQuestion();
-</script>
-
+            document.getElementById('description').textContent = prompt;
+            document.getElementById('result').style.display = 'block';
+        }
+    </script>
 </body>
 </html>

@@ -1,108 +1,70 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>虚拟基因人格画像问卷（含付费解锁）</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中国国际象棋平台</title>
   <style>
-    html, body {
-      height: 100%;
-      margin: 0; padding: 0;
-      background: #f5f7fa;
-      font-family: "微软雅黑", sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 30px 10px;
-      box-sizing: border-box;
-    }
-    #mainbox {
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 6px 24px #cdd2f1;
-      width: 480px;
-      max-width: 98vw;
-      padding: 36px 24px 24px 24px;
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 20px;
     }
-    h2, h3 {
-      color: #2b2f4a;
-      text-align: center;
-      margin: 8px 0 24px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-    }
-    .question {
-      width: 100%;
-      margin-bottom: 18px;
-    }
-    .question-text {
-      font-weight: 700;
-      margin-bottom: 10px;
-      font-size: 17px;
-      color: #222;
-    }
-    .question-img {
-      width: 100%;
-      height: auto;
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
-    .option {
-      background: #f3f3fa;
-      border: 1.5px solid #c7d2fe;
-      border-radius: 8px;
-      padding: 13px 11px;
-      margin: 8px 0;
-      font-size: 16px;
-      cursor: pointer;
-      user-select: none;
-      transition: all 0.15s ease;
-      position: relative;
-    }
-    .option:hover {
-      background: #d1d8fd;
-    }
-    .option.selected {
-      background: linear-gradient(90deg,#818cf8 70%,#60a5fa 100%);
-      color: white;
-      border-color: #6366f1;
-      font-weight: bold;
-      box-shadow: 0 2px 8px #dbeafe;
-    }
-    #btnSubmit, #btnRestart {
-      margin-top: 18px;
-      padding: 14px;
-      font-size: 18px;
-      font-weight: 600;
-      border-radius: 8px;
-      border: none;
-      background: linear-gradient(90deg,#6366f1,#60a5fa 70%);
-      color: white;
-      cursor: pointer;
-      width: 100%;
-      box-shadow: 0 2px 8px #dbeafe;
-      transition: background 0.2s ease;
-    }
-    #btnSubmit:disabled {
-      background: #dbeafe;
-      cursor: not-allowed;
-      color: #90a4c6;
-    }
-    #resultSection {
-      display: none;
-      width: 100%;
-      margin-top: 24px;
-    }
-    #promptOutput {
-      background: #f4f6fb;
-      border-radius: 8px;
-      padding: 16px;
-      white-space: pre-wrap;
-      font-size: 15.6px;
-      line-height: 1.4;
+    h1 {
       color: #333;
-      max-height: 200px;
-      overflow-y: auto;
+    }
+    #board {
+      width: 400px;
+      height: 400px;
+    }
+    #status {
+      margin-top: 10px;
+      font-size: 16px;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard.min.css" />
+</head>
+<body>
+  <h1>中国国际象棋平台</h1>
+  <div id="board"></div>
+  <div id="status">游戏状态</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard.min.js"></script>
+  <script>
+    const game = new Chess();
+    const board = Chessboard('board', {
+      draggable: true,
+      position: 'start',
+      onDrop: (source, target) => {
+        const move = game.move({
+          from: source,
+          to: target,
+          promotion: 'q' // 兵升变为后
+        });
+
+        if (move === null) return 'snapback';
+        updateStatus();
+      }
+    });
+
+    function updateStatus() {
+      let status = '';
+      if (game.in_checkmate()) {
+        status = '将死！游戏结束。';
+      } else if (game.in_draw()) {
+        status = '和棋。';
+      } else {
+        status = '轮到 ' + (game.turn() === 'w' ? '白方' : '黑方') + '。';
+        if (game.in_check()) {
+          status += ' 将军！';
+        }
+      }
+      document.getElementById('status').innerText = status;
+    }
+  </script>
+</body>
+</html>

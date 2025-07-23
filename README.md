@@ -1,81 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Interactive Chess Board</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Chess Page</title>
   <!-- Chessboard.js CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/css/chessboard.min.css" integrity="sha512-AfuAx+9e7ZH9u6SjxYVlbqE0VhzQXgCw77L54eOWdM2TB4FKM1xlB2243X1RcGVbX68KVi7HVgxtb4xlzR99PQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-color: #f0f0f0;
-      height: 100vh;
-    }
-    h1 {
-      margin-top: 20px;
-    }
-    #board {
-      margin-top: 20px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    #status {
-      margin-top: 10px;
-    }
-    #controls {
-      margin-top: 15px;
-    }
-    button {
-      padding: 8px 12px;
-      border: none;
-      border-radius: 4px;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-      margin: 0 5px;
-    }
-    button:disabled {
-      background-color: #aaa;
-      cursor: not-allowed;
-    }
+    body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; }
+    #board { width: 400px; }
+    #status { margin-top: 10px; text-align: center; }
   </style>
 </head>
 <body>
-  <h1>Interactive Chess Board</h1>
-  <div id="board" style="width: 480px;"></div>
-  <div id="status"></div>
-  <div id="controls">
-    <button id="flipBtn">Flip Board</button>
-    <button id="resetBtn">Reset Game</button>
+  <div>
+    <div id="board"></div>
+    <div id="status">Game in progress</div>
   </div>
 
   <!-- Dependencies -->
-  <!-- jQuery is required for Chessboard.js -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJ+Y2u7Gv4dX+XrmnH5I2OY/hFsw5J3CEJ5kg=" crossorigin="anonymous"></script>
-  <!-- Chess.js: game logic -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js" integrity="sha512-c20vP6BYB0CU2n8A12YQCbRrZ5RG1k0dElREn5zHdipXMMjcEZCIbH8q+OA3bB7DheAO7J26Jb6TSizqeBbEWQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <!-- Chessboard.js: UI -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/js/chessboard.min.js" integrity="sha512-IuTQ7d2ZJkXgH+lcU+dYZ2R0qq0IvA41ft8ELn3GuTmvKXOY7f+tQFToVak8EQyN+FkW6B/F2mfOlk7bPGpYNQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+
   <script>
-    // Initialization
-    var board = null;
-    var game = new Chess();
+    const game = new Chess();
+    const board = Chessboard('board', {
+      draggable: true,
+      position: 'start',
+      onDragStart: onDragStart,
+      onDrop: onDrop,
+      onSnapEnd: onSnapEnd
+    });
 
     function onDragStart(source, piece, position, orientation) {
-      if (game.game_over() ||
-          (game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+      // Do not pick up pieces if game is over
+      if (game.game_over()) return false;
+      // Only pick up pieces for the side to move
+      if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
           (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
         return false;
       }
     }
 
     function onDrop(source, target) {
-      var move = game.move({ from: source, to: target, promotion: 'q' });
+      // See if the move is legal
+      const move = game.move({ from: source, to: target, promotion: 'q' });
+
+      // Illegal move
       if (move === null) return 'snapback';
+
       updateStatus();
     }
 
@@ -84,38 +57,19 @@
     }
 
     function updateStatus() {
-      var status = '';
-      var moveColor = (game.turn() === 'w') ? 'White' : 'Black';
-
+      let status = '';
       if (game.in_checkmate()) {
-        status = 'Game over, ' + moveColor + ' is in checkmate.';
+        status = 'Game over, ' + (game.turn() === 'w' ? 'Black' : 'White') + ' wins by checkmate.';
       } else if (game.in_draw()) {
         status = 'Game over, drawn position.';
       } else {
-        status = moveColor + ' to move';
+        status = (game.turn() === 'w' ? 'White' : 'Black') + ' to move';
         if (game.in_check()) {
-          status += ', ' + moveColor + ' is in check';
+          status += ', ' + (game.turn() === 'w' ? 'White' : 'Black') + ' is in check';
         }
       }
-
-      document.getElementById('status').innerText = status;
+      document.getElementById('status').textContent = status;
     }
-
-    var config = {
-      draggable: true,
-      position: 'start',
-      onDragStart: onDragStart,
-      onDrop: onDrop,
-      onSnapEnd: onSnapEnd
-    };
-    $(document).ready(function() {
-      board = Chessboard('board', config);
-      updateStatus();
-
-      // Control Buttons
-      $('#flipBtn').on('click', function() { board.flip(); });
-      $('#resetBtn').on('click', function() { game.reset(); board.start(); updateStatus(); });
-    });
   </script>
 </body>
 </html>

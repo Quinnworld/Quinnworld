@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Interactive Chess Board</title>
-  <!-- Chessboard.js CDN -->
+  <!-- Chessboard.js CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/css/chessboard.min.css" integrity="sha512-AfuAx+9e7ZH9u6SjxYVlbqE0VhzQXgCw77L54eOWdM2TB4FKM1xlB2243X1RcGVbX68KVi7HVgxtb4xlzR99PQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     body {
@@ -54,7 +54,11 @@
   </div>
 
   <!-- Dependencies -->
+  <!-- jQuery is required for Chessboard.js -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJ+Y2u7Gv4dX+XrmnH5I2OY/hFsw5J3CEJ5kg=" crossorigin="anonymous"></script>
+  <!-- Chess.js: game logic -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js" integrity="sha512-c20vP6BYB0CU2n8A12YQCbRrZ5RG1k0dElREn5zHdipXMMjcEZCIbH8q+OA3bB7DheAO7J26Jb6TSizqeBbEWQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- Chessboard.js: UI -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/js/chessboard.min.js" integrity="sha512-IuTQ7d2ZJkXgH+lcU+dYZ2R0qq0IvA41ft8ELn3GuTmvKXOY7f+tQFToVak8EQyN+FkW6B/F2mfOlk7bPGpYNQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
     // Initialization
@@ -70,11 +74,7 @@
     }
 
     function onDrop(source, target) {
-      var move = game.move({
-        from: source,
-        to: target,
-        promotion: 'q'
-      });
+      var move = game.move({ from: source, to: target, promotion: 'q' });
       if (move === null) return 'snapback';
       updateStatus();
     }
@@ -108,18 +108,13 @@
       onDrop: onDrop,
       onSnapEnd: onSnapEnd
     };
-    board = Chessboard('board', config);
-
-    updateStatus();
-
-    // Control Buttons
-    document.getElementById('flipBtn').addEventListener('click', function() {
-      board.flip();
-    });
-    document.getElementById('resetBtn').addEventListener('click', function() {
-      game.reset();
-      board.start();
+    $(document).ready(function() {
+      board = Chessboard('board', config);
       updateStatus();
+
+      // Control Buttons
+      $('#flipBtn').on('click', function() { board.flip(); });
+      $('#resetBtn').on('click', function() { game.reset(); board.start(); updateStatus(); });
     });
   </script>
 </body>
